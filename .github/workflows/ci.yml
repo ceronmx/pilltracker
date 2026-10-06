@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: No network permission in any manifest (source)
+        run: bash scripts/check-no-network-permission.sh .
+
+      - name: No direct time access outside platform
+        run: |
+          if grep -rEn "System\.currentTimeMillis|Instant\.now\(|LocalDate\.now\(|LocalDateTime\.now\(|ZoneId\.systemDefault" \
+              --include=*.kt domain data app 2>/dev/null; then
+            echo "FAIL: use the injected Clock instead (see ADR 0002)"; exit 1
+          fi
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Lint and unit tests
+        run: ./gradlew check
+        # Skipped automatically until the Gradle project exists
+        if: hashFiles('gradlew') != ''
+
+      - name: Verify merged release manifest has no network permission
+        if: hashFiles('gradlew') != ''
+        run: |
+          ./gradlew :app:processReleaseManifest
+          bash scripts/check-no-network-permission.sh app/build

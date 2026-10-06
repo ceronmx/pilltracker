@@ -5,6 +5,19 @@ Read this file fully before writing any code. Rules here override defaults.
 ## Product in one paragraph
 A 100% local Android app that reminds one person to take a daily birth-control pill, lets her log it in one tap, and shows a month history. No accounts, no network, no analytics, no medical advice. Spec: `docs/spec.md`.
 
+## Top priority: effortless setup and use
+1. **Minimal taps.** First launch to a working daily reminder in as few taps as possible: one screen, sensible defaults (e.g. a preset time), one "Enable reminders" action that also handles the notification/exact-alarm permission. No accounts, no tutorial carousel, no multi-step wizard.
+2. Logging a pill is one tap (from the notification action or the home screen). Any proposed flow that adds a tap or screen needs a stated reason.
+3. When a design trade-off pits simplicity of setup/use against a feature, simplicity wins.
+
+## Localization (required)
+- The app ships in **English and Spanish**; **every** user-visible string (UI, notifications, permission rationales, errors, dates/times formatting, accessibility labels) lives in `values/strings.xml` (en, default) and `values-es/strings.xml`. No hardcoded text in Kotlin/Compose.
+- Follow the system language; no in-app language picker (saves a setup step). Fall back to English.
+- Use plurals/format args (`%1$s`) instead of string concatenation; format dates with the locale-aware `java.time` formatters.
+- Neutral notification wording applies in both languages (e.g. "Time for your daily check-in" / "Es hora de tu registro diario").
+- CI/`check` must fail if a string key exists in one locale and not the other (Android lint `MissingTranslation` as error).
+- UI tests cover both locales for the three screens.
+
 ## Hard constraints (never violate)
 1. **No network.** The manifest must NOT declare `android.permission.INTERNET` (or any network-state permission). Do not add networking libraries (OkHttp, Retrofit, Ktor, Firebase, analytics, crash reporters). CI enforces this.
 2. **No cloud backup of data.** `android:allowBackup="false"` and data extraction rules exclude the database.
