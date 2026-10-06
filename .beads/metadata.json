@@ -1,0 +1,7 @@
+{
+  "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "embedded",
+  "dolt_database": "pilltracker",
+  "project_id": "9ca6d008-0ec0-4d26-aae4-9874a7b163fb"
+}
