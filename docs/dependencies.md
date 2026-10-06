@@ -8,3 +8,5 @@ Every dependency needs a reason here. No networking, analytics or crash-reportin
 | activity-compose | `ComponentActivity` + `setContent` | j2a |
 | JUnit 5 | Domain unit tests (CLAUDE.md) | j2a |
 | Hilt (`hilt-android`, compiler) + KSP | Constructor injection, required by CLAUDE.md; KSP over kapt for build speed | c3v |
+| ktlint (jlleitschuh gradle plugin) | Code style gate in `check` (CLAUDE.md) | qpi |
+| detekt | Static analysis gate in `check` (CLAUDE.md) | qpi |
