@@ -57,7 +57,7 @@ class SettingsRepositoryTest {
             PillDatabase::class.java,
         )
             .build()
-    private val repo = RoomSettingsRepository(db.settingsDao())
+    private val repo = RoomSettingsRepository(db)
 
     @After fun close() = db.close()
 
@@ -70,5 +70,16 @@ class SettingsRepositoryTest {
             val second = Settings(PackType.TWENTY_ONE_PLUS_SEVEN, LocalDate.of(2026, 9, 20), LocalTime.of(21, 45))
             repo.save(second)
             assertEquals(second, repo.settings.first())
+        }
+
+    @Test fun deleteAllEmptiesSettingsAndIntakes() =
+        runTest {
+            val intakes = RoomIntakeRepository(db.intakeDao())
+            val day = LocalDate.of(2026, 10, 6)
+            repo.save(Settings(PackType.TWENTY_EIGHT, day, LocalTime.of(9, 0)))
+            intakes.markTaken(day, Instant.EPOCH)
+            repo.deleteAll()
+            assertEquals(null, repo.settings.first())
+            assertEquals(emptySet<LocalDate>(), intakes.takenDays(LocalDate.MIN, LocalDate.MAX).first())
         }
 }

@@ -11,9 +11,13 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.NotificationManagerCompat
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -27,6 +31,8 @@ import dev.pilltracker.domain.SettingsRepository
 import dev.pilltracker.ui.screens.HomeScreen
 import dev.pilltracker.ui.screens.HomeUiEvent
 import dev.pilltracker.ui.screens.HomeViewModel
+import dev.pilltracker.ui.screens.SettingsSheet
+import dev.pilltracker.ui.screens.SettingsViewModel
 import dev.pilltracker.ui.screens.SetupScreen
 import dev.pilltracker.ui.screens.SetupUiEvent
 import dev.pilltracker.ui.screens.SetupViewModel
@@ -65,9 +71,27 @@ private fun PillTrackerNavHost(start: Route) {
             val vm: HomeViewModel = hiltViewModel()
             val state by vm.state.collectAsState()
             LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { vm.onEvent(HomeUiEvent.Resumed) }
-            HomeScreen(state, vm::onEvent)
+            var showSettings by rememberSaveable { mutableStateOf(false) }
+            HomeScreen(state, vm::onEvent, onSettings = { showSettings = true })
+            if (showSettings) {
+                SettingsRoute(onClose = { showSettings = false }) {
+                    // All data deleted (AC7.3): back to Setup, with no way back to Home.
+                    nav.navigate(Route.Setup.name) { popUpTo(Route.Home.name) { inclusive = true } }
+                }
+            }
         }
     }
+}
+
+@Composable
+private fun SettingsRoute(
+    onClose: () -> Unit,
+    onReset: () -> Unit,
+) {
+    val vm: SettingsViewModel = hiltViewModel()
+    val state by vm.state.collectAsState()
+    LaunchedEffect(state.resetDone) { if (state.resetDone) onReset() }
+    SettingsSheet(state, vm::onEvent, onClose)
 }
 
 /** Enable asks for notifications only (ADR 0004); denial shows the notice with retry (AC1.2, AC1.3). */

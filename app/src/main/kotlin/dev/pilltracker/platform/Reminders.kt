@@ -42,13 +42,25 @@ class AlarmReminderScheduler
         @ApplicationContext private val context: Context,
         private val clock: Clock,
     ) : ReminderScheduler {
+        private val alarms get() = context.getSystemService(AlarmManager::class.java)
+
+        // Same PendingIntent every time, so a new alarm replaces the old one and cancel() finds it.
+        private fun remind() =
+            PendingIntent.getBroadcast(
+                context,
+                0,
+                Intent(context, ReminderReceiver::class.java).setAction(ACTION_REMIND),
+                PendingIntent.FLAG_IMMUTABLE,
+            )
+
         override fun scheduleNext(time: LocalTime) {
             val at = nextReminderAt(time, clock.instant(), clock.zone)
-            val remind = Intent(context, ReminderReceiver::class.java).setAction(ACTION_REMIND)
-            val pending = PendingIntent.getBroadcast(context, 0, remind, PendingIntent.FLAG_IMMUTABLE)
-            // Same PendingIntent replaces any earlier alarm, so there is only ever one.
-            context.getSystemService(AlarmManager::class.java)
-                .setWindow(AlarmManager.RTC_WAKEUP, at.toEpochMilli(), WINDOW_MILLIS, pending)
+            alarms.setWindow(AlarmManager.RTC_WAKEUP, at.toEpochMilli(), WINDOW_MILLIS, remind())
+        }
+
+        override fun cancel() {
+            alarms.cancel(remind())
+            context.getSystemService(NotificationManager::class.java).cancel(NOTIFICATION_ID)
         }
     }
 

@@ -34,4 +34,12 @@
     <string name="day_not_taken">%1$s, not taken</string>
     <string name="day_placebo">%1$s, placebo</string>
     <string name="day_break">%1$s, break day</string>
+
+    <!-- Settings sheet -->
+    <string name="settings">Settings</string>
+    <string name="delete_all_data">Delete all data</string>
+    <string name="delete_all_data_title">Delete all data?</string>
+    <string name="delete_all_data_body">This removes your history and settings from this phone and turns off reminders. It can\'t be undone.</string>
+    <string name="delete">Delete</string>
+    <string name="cancel">Cancel</string>
 </resources>

@@ -23,5 +23,5 @@ object DataModule {
 
     @Provides fun intakes(db: PillDatabase): IntakeRepository = RoomIntakeRepository(db.intakeDao())
 
-    @Provides fun settings(db: PillDatabase): SettingsRepository = RoomSettingsRepository(db.settingsDao())
+    @Provides fun settings(db: PillDatabase): SettingsRepository = RoomSettingsRepository(db)
 }

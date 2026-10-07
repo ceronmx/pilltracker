@@ -17,4 +17,7 @@ interface SettingsRepository {
     val settings: Flow<Settings?>
 
     suspend fun save(settings: Settings)
+
+    /** Reset (AC7.3): deletes all app data, settings and intakes alike. */
+    suspend fun deleteAll()
 }

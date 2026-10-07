@@ -3,14 +3,24 @@ package dev.pilltracker.ui.screens
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.ZeroCornerSize
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -22,6 +32,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import dev.pilltracker.R
 import dev.pilltracker.domain.rules.DayKind
+import dev.pilltracker.domain.rules.PackType
 import dev.pilltracker.ui.components.MonthGrid
 import dev.pilltracker.ui.components.PackTypeSelector
 import dev.pilltracker.ui.components.PermissionNotice
@@ -36,10 +47,11 @@ import java.time.DayOfWeek
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
-/** Shared screen frame: system-bar insets, page padding, large title. */
+/** Shared screen frame: system-bar insets, page padding, large title with an optional corner [action]. */
 @Composable
 private fun ScreenFrame(
     title: String,
+    action: @Composable () -> Unit = {},
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Scaffold { insets ->
@@ -47,7 +59,10 @@ private fun ScreenFrame(
             Modifier.fillMaxSize().padding(insets).padding(24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            Text(title, style = MaterialTheme.typography.headlineLarge)
+            Row {
+                Text(title, Modifier.weight(1f), style = MaterialTheme.typography.headlineLarge)
+                action()
+            }
             content()
         }
     }
@@ -96,10 +111,14 @@ fun SetupScreen(
 fun HomeScreen(
     state: HomeUiState,
     onEvent: (HomeUiEvent) -> Unit,
+    onSettings: () -> Unit,
 ) {
     val locale = LocalConfiguration.current.locales[0]
     val dateLabel = DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL).withLocale(locale).format(state.today)
-    ScreenFrame(dateLabel.replaceFirstChar { it.titlecase(locale) }) {
+    val settingsButton = @Composable {
+        IconButton(onSettings) { Icon(Icons.Filled.Settings, stringResource(R.string.settings)) }
+    }
+    ScreenFrame(dateLabel.replaceFirstChar { it.titlecase(locale) }, settingsButton) {
         Column(
             Modifier.verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(24.dp),
@@ -123,6 +142,61 @@ fun HomeScreen(
     }
 }
 
+/** Reminder time (editable), pack type (read-only) and Reset (AC7.1-7.3). */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SettingsSheet(
+    state: SettingsUiState,
+    onEvent: (SettingsUiEvent) -> Unit,
+    onClose: () -> Unit,
+) {
+    val settings = state.settings ?: return
+    // Theme extraLarge is 50% (pill buttons), the sheet's default; use the 28dp card radius on top instead.
+    val shape = MaterialTheme.shapes.large.copy(bottomStart = ZeroCornerSize, bottomEnd = ZeroCornerSize)
+    ModalBottomSheet(onClose, shape = shape) {
+        Column(
+            Modifier.padding(horizontal = 24.dp).padding(bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            Text(stringResource(R.string.settings), style = MaterialTheme.typography.headlineSmall)
+            TimeSelector(settings.reminderTime, { onEvent(SettingsUiEvent.TimeClicked) })
+            Row {
+                Text(stringResource(R.string.pack_type_label), Modifier.weight(1f))
+                Text(
+                    stringResource(
+                        if (settings.packType == PackType.TWENTY_EIGHT) R.string.pack_28 else R.string.pack_21_7,
+                    ),
+                )
+            }
+            TextButton(
+                { onEvent(SettingsUiEvent.ResetClicked) },
+                Modifier.align(Alignment.CenterHorizontally),
+                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
+            ) { Text(stringResource(R.string.delete_all_data)) }
+        }
+    }
+    if (state.showTimePicker) {
+        ReminderTimePickerDialog(
+            settings.reminderTime,
+            { onEvent(SettingsUiEvent.TimePicked(it)) },
+            { onEvent(SettingsUiEvent.PickerDismissed) },
+        )
+    }
+    if (state.confirmReset) {
+        AlertDialog(
+            onDismissRequest = { onEvent(SettingsUiEvent.ResetDismissed) },
+            title = { Text(stringResource(R.string.delete_all_data_title)) },
+            text = { Text(stringResource(R.string.delete_all_data_body)) },
+            confirmButton = {
+                TextButton({ onEvent(SettingsUiEvent.ResetConfirmed) }) { Text(stringResource(R.string.delete)) }
+            },
+            dismissButton = {
+                TextButton({ onEvent(SettingsUiEvent.ResetDismissed) }) { Text(stringResource(R.string.cancel)) }
+            },
+        )
+    }
+}
+
 @PillPreviews
 @Composable
 private fun SetupPreview() = PillTrackerTheme { SetupScreen(SetupUiState(), {}, {}, {}) }
@@ -135,19 +209,19 @@ private val sampleHome = HomeUiState(Sample.today, month = Sample.month, weeks =
 
 @PillPreviews
 @Composable
-private fun HomeUntakenPreview() = PillTrackerTheme { HomeScreen(sampleHome, {}) }
+private fun HomeUntakenPreview() = PillTrackerTheme { HomeScreen(sampleHome, {}, {}) }
 
 @PillPreviews
 @Composable
-private fun HomeTakenPreview() = PillTrackerTheme { HomeScreen(sampleHome.copy(taken = true), {}) }
+private fun HomeTakenPreview() = PillTrackerTheme { HomeScreen(sampleHome.copy(taken = true), {}, {}) }
 
 @PillPreviews
 @Composable
-private fun HomePlaceboPreview() = PillTrackerTheme { HomeScreen(sampleHome.copy(dayKind = DayKind.PLACEBO), {}) }
+private fun HomePlaceboPreview() = PillTrackerTheme { HomeScreen(sampleHome.copy(dayKind = DayKind.PLACEBO), {}, {}) }
 
 @PillPreviews
 @Composable
 private fun HomeBreakPreview() =
     PillTrackerTheme {
-        HomeScreen(sampleHome.copy(dayKind = DayKind.BREAK), {})
+        HomeScreen(sampleHome.copy(dayKind = DayKind.BREAK), {}, {})
     }

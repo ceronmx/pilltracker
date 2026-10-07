@@ -51,13 +51,23 @@ class InMemorySettingsRepository(initial: Settings? = null) : SettingsRepository
     override suspend fun save(settings: Settings) {
         this.settings.value = settings
     }
+
+    override suspend fun deleteAll() {
+        settings.value = null
+    }
 }
 
 class FakeReminderScheduler : ReminderScheduler {
     val scheduled = mutableListOf<LocalTime>()
 
+    var cancelled = false
+
     override fun scheduleNext(time: LocalTime) {
         scheduled += time
+    }
+
+    override fun cancel() {
+        cancelled = true
     }
 }
 
@@ -263,5 +273,37 @@ class ViewModelsTest {
         assertTrue(vm.state.value.taken)
         vm.onEvent(HomeUiEvent.NextMonth)
         assertEquals(DayStatus.TAKEN, vm.state.value.weeks.flatten().filterNotNull().single { it.isToday }.status)
+    }
+
+    private val saved = Settings(PackType.TWENTY_ONE_PLUS_SEVEN, LocalDate.of(2026, 10, 1), LocalTime.of(9, 0))
+
+    @Test
+    fun settingsShowsSavedAnswersAndNewTimeReschedules() {
+        settings.settings.value = saved
+        val vm = SettingsViewModel(settings, scheduler)
+        assertEquals(saved, vm.state.value.settings)
+        vm.onEvent(SettingsUiEvent.TimeClicked)
+        assertTrue(vm.state.value.showTimePicker)
+        vm.onEvent(SettingsUiEvent.TimePicked(LocalTime.of(21, 0)))
+        assertFalse(vm.state.value.showTimePicker)
+        assertEquals(saved.copy(reminderTime = LocalTime.of(21, 0)), settings.settings.value)
+        assertEquals(listOf(LocalTime.of(21, 0)), scheduler.scheduled)
+    }
+
+    @Test
+    fun resetAsksFirstThenDeletesEverythingAndCancelsTheReminder() {
+        settings.settings.value = saved
+        val vm = SettingsViewModel(settings, scheduler)
+        vm.onEvent(SettingsUiEvent.ResetClicked)
+        assertTrue(vm.state.value.confirmReset)
+        vm.onEvent(SettingsUiEvent.ResetDismissed)
+        assertFalse(vm.state.value.confirmReset)
+        assertEquals(saved, settings.settings.value) // nothing deleted without confirming
+
+        vm.onEvent(SettingsUiEvent.ResetClicked)
+        vm.onEvent(SettingsUiEvent.ResetConfirmed)
+        assertEquals(null, settings.settings.value)
+        assertTrue(scheduler.cancelled)
+        assertTrue(vm.state.value.resetDone)
     }
 }

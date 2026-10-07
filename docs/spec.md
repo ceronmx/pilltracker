@@ -34,5 +34,11 @@ A 100% local Android app: remind one person to take a daily pill, log it in one 
 - AC6.1 No `INTERNET` or network-state permission ([ADR 0001](adr/0001-local-only-no-network.md)).
 - AC6.2 `allowBackup="false"`; data extraction rules exclude the database.
 
+## 7. Settings
+- AC7.1 A settings icon in the top corner of Home (accessibility label in en and es) opens a bottom sheet, not a new screen.
+- AC7.2 The sheet shows the reminder time, editable with the same picker as setup; a new time replaces the scheduled reminder at once. It shows the pack type read-only (changing it mid-pack would shift past break days; use Reset instead).
+- AC7.3 A **Reset** button asks for confirmation ("Delete all data?", Cancel / Delete). On Delete: all intakes and settings are deleted, the reminder alarm is cancelled, any shown notification is cleared, and the app returns to Setup with no way back to Home.
+- AC7.4 Neutral wording; no advice.
+
 ## Out of scope
 Accounts, sync, cloud backup, analytics, medical guidance, widgets, wear, multiple users.

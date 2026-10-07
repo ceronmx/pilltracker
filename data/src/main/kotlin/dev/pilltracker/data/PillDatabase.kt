@@ -14,8 +14,10 @@ import dev.pilltracker.domain.IntakeRepository
 import dev.pilltracker.domain.Settings
 import dev.pilltracker.domain.SettingsRepository
 import dev.pilltracker.domain.rules.PackType
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
@@ -92,7 +94,9 @@ class RoomIntakeRepository(private val dao: IntakeDao) : IntakeRepository {
     ) = dao.insert(IntakeEntity(day.toEpochDay(), at.toEpochMilli()))
 }
 
-class RoomSettingsRepository(private val dao: SettingsDao) : SettingsRepository {
+class RoomSettingsRepository(private val db: PillDatabase) : SettingsRepository {
+    private val dao = db.settingsDao()
+
     override val settings: Flow<Settings?> =
         dao.settings().map { e ->
             e?.let {
@@ -112,6 +116,9 @@ class RoomSettingsRepository(private val dao: SettingsDao) : SettingsRepository 
                 reminderMinuteOfDay = settings.reminderTime.toSecondOfDay() / SECONDS_PER_MINUTE.toInt(),
             ),
         )
+
+    /** Every table, so data added later is wiped too. clearAllTables blocks, hence IO. */
+    override suspend fun deleteAll() = withContext(Dispatchers.IO) { db.clearAllTables() }
 
     private companion object {
         const val SECONDS_PER_MINUTE = 60L

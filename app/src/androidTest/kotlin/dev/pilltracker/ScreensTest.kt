@@ -11,16 +11,21 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.then
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
+import dev.pilltracker.domain.Settings
 import dev.pilltracker.domain.rules.DayKind
+import dev.pilltracker.domain.rules.PackType
 import dev.pilltracker.ui.preview.Sample
 import dev.pilltracker.ui.screens.HomeScreen
 import dev.pilltracker.ui.screens.HomeUiState
+import dev.pilltracker.ui.screens.SettingsSheet
+import dev.pilltracker.ui.screens.SettingsUiState
 import dev.pilltracker.ui.screens.SetupScreen
 import dev.pilltracker.ui.screens.SetupUiState
 import dev.pilltracker.ui.theme.PillTrackerTheme
 import org.junit.Rule
 import org.junit.Test
 import java.time.DayOfWeek.MONDAY
+import java.time.LocalTime
 
 /** Each screen renders static state in en and es (AC5.5). */
 class ScreensTest {
@@ -36,7 +41,7 @@ class ScreensTest {
     private fun home(
         lang: String,
         taken: Boolean,
-    ) = rule.setContentIn(lang) { PillTrackerTheme { HomeScreen(sampleHome.copy(taken = taken), {}) } }
+    ) = rule.setContentIn(lang) { PillTrackerTheme { HomeScreen(sampleHome.copy(taken = taken), {}, {}) } }
 
     private val sampleHome = HomeUiState(Sample.today, month = Sample.month, weeks = Sample.weeks(MONDAY))
 
@@ -82,7 +87,7 @@ class ScreensTest {
 
     @Test fun homeBreakDayEn() {
         rule.setContentIn("en") {
-            PillTrackerTheme { HomeScreen(sampleHome.copy(dayKind = DayKind.BREAK), {}) }
+            PillTrackerTheme { HomeScreen(sampleHome.copy(dayKind = DayKind.BREAK), {}, {}) }
         }
         rule.onNodeWithText("Break day").assertExists()
         rule.onNodeWithText("Taken").assertDoesNotExist()
@@ -90,7 +95,7 @@ class ScreensTest {
 
     @Test fun homePlaceboDayEs() {
         rule.setContentIn("es") {
-            PillTrackerTheme { HomeScreen(sampleHome.copy(dayKind = DayKind.PLACEBO), {}) }
+            PillTrackerTheme { HomeScreen(sampleHome.copy(dayKind = DayKind.PLACEBO), {}, {}) }
         }
         rule.onNodeWithText("Día de placebo").assertExists()
         rule.onNodeWithText("Tomada").assertExists()
@@ -121,5 +126,33 @@ class ScreensTest {
         rule.onNodeWithContentDescription("1 de octubre de 2026, tomada").assertExists()
         rule.onNodeWithContentDescription("22 de octubre de 2026, día de descanso").assertExists()
         rule.onNodeWithContentDescription("29 de octubre de 2026, placebo").assertExists()
+    }
+
+    private val saved = Settings(PackType.TWENTY_ONE_PLUS_SEVEN, Sample.today, LocalTime.of(9, 0))
+
+    /** Settings sheet: time, read-only pack, reset with confirmation (AC7.1-7.3). */
+    @Test fun settingsSheetEn() {
+        rule.setContentIn("en") {
+            PillTrackerTheme {
+                HomeScreen(sampleHome, {}, {})
+                SettingsSheet(SettingsUiState(saved, confirmReset = true), {}, {})
+            }
+        }
+        rule.onNodeWithContentDescription("Settings").assertExists()
+        rule.onNodeWithText("21 + 7 break").assertExists()
+        rule.onNodeWithText("Delete all data?").assertExists()
+        rule.onNodeWithText("Delete").assertExists()
+    }
+
+    @Test fun settingsIconEs() {
+        rule.setContentIn("es") {
+            PillTrackerTheme {
+                HomeScreen(sampleHome, {}, {})
+                SettingsSheet(SettingsUiState(saved), {}, {})
+            }
+        }
+        // The sheet is its own window, which the test-only locale override doesn't reach (it shows en);
+        // the real app follows the system language everywhere, and lint MissingTranslation covers es keys.
+        rule.onNodeWithContentDescription("Ajustes").assertExists()
     }
 }

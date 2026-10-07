@@ -206,3 +206,63 @@ class HomeViewModel
             return DayCell(date, status, isToday = date == today, isPlacebo = kind == DayKind.PLACEBO)
         }
     }
+
+/** Settings sheet on Home (AC7.1-7.3). */
+data class SettingsUiState(
+    val settings: Settings? = null,
+    val showTimePicker: Boolean = false,
+    val confirmReset: Boolean = false,
+    /** All data is gone: leave for Setup. */
+    val resetDone: Boolean = false,
+)
+
+sealed interface SettingsUiEvent {
+    data object TimeClicked : SettingsUiEvent
+
+    data class TimePicked(val time: LocalTime) : SettingsUiEvent
+
+    data object PickerDismissed : SettingsUiEvent
+
+    data object ResetClicked : SettingsUiEvent
+
+    data object ResetDismissed : SettingsUiEvent
+
+    data object ResetConfirmed : SettingsUiEvent
+}
+
+@HiltViewModel
+class SettingsViewModel
+    @Inject
+    constructor(
+        private val settings: SettingsRepository,
+        private val reminders: ReminderScheduler,
+    ) : ViewModel() {
+        private val ui = MutableStateFlow(SettingsUiState())
+
+        val state: StateFlow<SettingsUiState> =
+            combine(ui, settings.settings) { u, s -> u.copy(settings = s) }
+                .stateIn(viewModelScope, SharingStarted.Eagerly, ui.value)
+
+        fun onEvent(event: SettingsUiEvent) {
+            when (event) {
+                SettingsUiEvent.TimeClicked -> ui.update { it.copy(showTimePicker = true) }
+                SettingsUiEvent.PickerDismissed -> ui.update { it.copy(showTimePicker = false) }
+                is SettingsUiEvent.TimePicked -> {
+                    ui.update { it.copy(showTimePicker = false) }
+                    val current = state.value.settings ?: return
+                    viewModelScope.launch {
+                        settings.save(current.copy(reminderTime = event.time))
+                        reminders.scheduleNext(event.time)
+                    }
+                }
+                SettingsUiEvent.ResetClicked -> ui.update { it.copy(confirmReset = true) }
+                SettingsUiEvent.ResetDismissed -> ui.update { it.copy(confirmReset = false) }
+                SettingsUiEvent.ResetConfirmed ->
+                    viewModelScope.launch {
+                        reminders.cancel()
+                        settings.deleteAll()
+                        ui.update { it.copy(confirmReset = false, resetDone = true) }
+                    }
+            }
+        }
+    }

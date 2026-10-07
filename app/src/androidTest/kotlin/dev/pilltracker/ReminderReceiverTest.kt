@@ -39,7 +39,7 @@ class ReminderReceiverTest {
     }
 
     private fun fireWith(settings: Settings): Int {
-        runBlocking { RoomSettingsRepository(db.settingsDao()).save(settings) }
+        runBlocking { RoomSettingsRepository(db).save(settings) }
         context.sendBroadcast(Intent(context, ReminderReceiver::class.java).setAction(ACTION_REMIND))
         Thread.sleep(2_000) // receiver works on a background coroutine
         return manager.activeNotifications.size

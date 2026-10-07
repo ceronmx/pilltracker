@@ -31,4 +31,21 @@ class NavigationTest {
         rule.onNodeWithText(str(R.string.taken_today)).assertExists()
         rule.onNodeWithContentDescription(str(R.string.next_month)).assertExists()
     }
+
+    /** Reset deletes everything and lands on Setup (AC7.3). */
+    @Test fun resetFromSettingsReturnsToSetup() {
+        rule.waitUntil(
+            5_000,
+        ) { rule.onAllNodesWithText(str(R.string.enable_reminders)).fetchSemanticsNodes().isNotEmpty() }
+        rule.onNodeWithText(str(R.string.enable_reminders)).performClick()
+        rule.onNodeWithContentDescription(str(R.string.settings)).performClick()
+        rule.waitUntil(
+            5_000,
+        ) { rule.onAllNodesWithText(str(R.string.delete_all_data)).fetchSemanticsNodes().isNotEmpty() }
+        rule.onNodeWithText(str(R.string.delete_all_data)).performClick()
+        rule.onNodeWithText(str(R.string.delete)).performClick()
+        rule.waitUntil(
+            5_000,
+        ) { rule.onAllNodesWithText(str(R.string.enable_reminders)).fetchSemanticsNodes().isNotEmpty() }
+    }
 }
