@@ -41,7 +41,10 @@ class ReminderReceiverTest {
     private fun fireWith(settings: Settings): Int {
         runBlocking { RoomSettingsRepository(db).save(settings) }
         context.sendBroadcast(Intent(context, ReminderReceiver::class.java).setAction(ACTION_REMIND))
-        Thread.sleep(2_000) // receiver works on a background coroutine
+        // The receiver works on a background coroutine: poll, since a loaded emulator can take seconds.
+        // ponytail: the break-day case always waits the full deadline to prove silence.
+        val deadline = System.nanoTime() + 5_000_000_000L
+        while (manager.activeNotifications.isEmpty() && System.nanoTime() < deadline) Thread.sleep(100)
         return manager.activeNotifications.size
     }
 
