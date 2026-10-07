@@ -64,10 +64,10 @@ class SettingsRepositoryTest {
     @Test fun nullUntilSavedThenRoundTripsAndOverwrites() =
         runTest {
             assertEquals(null, repo.settings.first())
-            val first = Settings(PackType.TWENTY_EIGHT, LocalDate.of(2026, 10, 1), LocalTime.of(9, 0))
+            val first = Settings(PackType.WITH_PLACEBO, LocalDate.of(2026, 10, 1), LocalTime.of(9, 0))
             repo.save(first)
             assertEquals(first, repo.settings.first())
-            val second = Settings(PackType.TWENTY_ONE_PLUS_SEVEN, LocalDate.of(2026, 9, 20), LocalTime.of(21, 45))
+            val second = Settings(PackType.WITH_BREAK, LocalDate.of(2026, 9, 20), LocalTime.of(21, 45))
             repo.save(second)
             assertEquals(second, repo.settings.first())
         }
@@ -76,7 +76,7 @@ class SettingsRepositoryTest {
         runTest {
             val intakes = RoomIntakeRepository(db.intakeDao())
             val day = LocalDate.of(2026, 10, 6)
-            repo.save(Settings(PackType.TWENTY_EIGHT, day, LocalTime.of(9, 0)))
+            repo.save(Settings(PackType.WITH_PLACEBO, day, LocalTime.of(9, 0)))
             intakes.markTaken(day, Instant.EPOCH)
             repo.deleteAll()
             assertEquals(null, repo.settings.first())

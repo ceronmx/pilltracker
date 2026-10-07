@@ -63,8 +63,8 @@ class ScreensTest {
 
     @Test fun setupAsksPackAndPillEn() {
         setup("en")
-        rule.onNodeWithText("28 pills").assertIsSelected()
-        rule.onNodeWithText("21 + 7 break").assertExists()
+        rule.onNodeWithText("21 + 7").assertIsSelected()
+        rule.onNodeWithText("21 pills").assertExists()
         rule.onNodeWithText("Pill 1 of 28").assertExists()
     }
 
@@ -85,16 +85,16 @@ class ScreensTest {
         rule.onNodeWithText("Continue without reminders").assertIsDisplayed()
     }
 
-    /** 21+7 setup during the break week: days 22-28 read as break days (806). */
+    /** 21-pill setup during the break week: days 22-28 read as break days (806). */
     @Test fun setupBreakWeekEs() {
-        val breakWeek = SetupUiState(PackType.TWENTY_ONE_PLUS_SEVEN, pillNumber = 23)
+        val breakWeek = SetupUiState(PackType.WITH_BREAK, pillNumber = 23)
         rule.setContentIn("es") { PillTrackerTheme { SetupScreen(breakWeek, {}, {}, {}) } }
         rule.onNodeWithText("Día 23 de 28 · descanso").assertExists()
     }
 
     @Test fun setupBreakWeekEn() {
         rule.setContentIn("en") {
-            PillTrackerTheme { SetupScreen(SetupUiState(PackType.TWENTY_ONE_PLUS_SEVEN, pillNumber = 23), {}, {}, {}) }
+            PillTrackerTheme { SetupScreen(SetupUiState(PackType.WITH_BREAK, pillNumber = 23), {}, {}, {}) }
         }
         rule.onNodeWithText("Day 23 of 28 · break").assertExists()
     }
@@ -142,7 +142,7 @@ class ScreensTest {
         rule.onNodeWithContentDescription("29 de octubre de 2026, placebo").assertExists()
     }
 
-    private val saved = Settings(PackType.TWENTY_ONE_PLUS_SEVEN, Sample.today, LocalTime.of(9, 0))
+    private val saved = Settings(PackType.WITH_BREAK, Sample.today, LocalTime.of(9, 0))
 
     /** Settings sheet: time, read-only pack, reset with confirmation (AC7.1-7.3). */
     @Test fun settingsSheetEn() {
@@ -153,7 +153,7 @@ class ScreensTest {
             }
         }
         rule.onNodeWithContentDescription("Settings").assertExists()
-        rule.onNodeWithText("21 + 7 break").assertExists()
+        rule.onNodeWithText("21 pills").assertExists()
         rule.onNodeWithText("Day 24 of 28 · break").assertExists()
         rule.onNodeWithText("Delete all data?").assertExists()
         rule.onNodeWithText("Delete").assertExists()

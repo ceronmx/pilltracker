@@ -102,7 +102,7 @@ class ViewModelsTest {
     fun setupDefaultsAndPickerUpdatesTime() {
         val vm = SetupViewModel(clockAt(oct6, LocalTime.NOON), settings, scheduler)
         assertEquals(SetupUiState(), vm.state.value)
-        assertEquals(PackType.TWENTY_EIGHT, vm.state.value.packType)
+        assertEquals(PackType.WITH_PLACEBO, vm.state.value.packType)
         assertEquals(1, vm.state.value.pillNumber)
         assertEquals(LocalTime.of(9, 0), vm.state.value.time)
         vm.onEvent(SetupUiEvent.TimeClicked)
@@ -126,16 +126,16 @@ class ViewModelsTest {
         assertEquals(1, vm.state.value.pillNumber)
         vm.onEvent(SetupUiEvent.PillNumberChanged(29))
         assertEquals(28, vm.state.value.pillNumber)
-        vm.onEvent(SetupUiEvent.PackTypeChosen(PackType.TWENTY_ONE_PLUS_SEVEN))
-        assertEquals(28, vm.state.value.pillNumber) // 21+7 also counts 1-28: 22-28 is the break week
+        vm.onEvent(SetupUiEvent.PackTypeChosen(PackType.WITH_BREAK))
+        assertEquals(28, vm.state.value.pillNumber) // 21 pills also counts 1-28: 22-28 is the break week
     }
 
     @Test
     fun setupDuringTheBreakWeekShowsABreakDayAndSavesThePackStart() {
         val vm = SetupViewModel(clockAt(oct6, LocalTime.NOON), settings, scheduler)
         vm.onEvent(SetupUiEvent.PillNumberChanged(23))
-        assertEquals(DayKind.PLACEBO, vm.state.value.dayKind) // 28 pack: day 23 is a placebo pill
-        vm.onEvent(SetupUiEvent.PackTypeChosen(PackType.TWENTY_ONE_PLUS_SEVEN))
+        assertEquals(DayKind.PLACEBO, vm.state.value.dayKind) // 21 + 7 pack: day 23 is a placebo pill
+        vm.onEvent(SetupUiEvent.PackTypeChosen(PackType.WITH_BREAK))
         assertEquals(DayKind.BREAK, vm.state.value.dayKind)
         vm.onEvent(SetupUiEvent.PillNumberChanged(21))
         assertEquals(DayKind.ACTIVE, vm.state.value.dayKind)
@@ -147,12 +147,12 @@ class ViewModelsTest {
     @Test
     fun saveStoresPackStartFromTodaysPill() {
         val vm = SetupViewModel(clockAt(oct6, LocalTime.NOON), settings, scheduler)
-        vm.onEvent(SetupUiEvent.PackTypeChosen(PackType.TWENTY_ONE_PLUS_SEVEN))
+        vm.onEvent(SetupUiEvent.PackTypeChosen(PackType.WITH_BREAK))
         vm.onEvent(SetupUiEvent.PillNumberChanged(6))
         vm.onEvent(SetupUiEvent.TimePicked(LocalTime.of(22, 0)))
         vm.onEvent(SetupUiEvent.Save)
         assertEquals(
-            Settings(PackType.TWENTY_ONE_PLUS_SEVEN, LocalDate.of(2026, 10, 1), LocalTime.of(22, 0)),
+            Settings(PackType.WITH_BREAK, LocalDate.of(2026, 10, 1), LocalTime.of(22, 0)),
             settings.settings.value,
         )
         assertEquals(listOf(LocalTime.of(22, 0)), scheduler.scheduled)
@@ -160,27 +160,27 @@ class ViewModelsTest {
 
     @Test
     fun homeShowsDayKindFromPack() {
-        settings.settings.value = Settings(PackType.TWENTY_ONE_PLUS_SEVEN, LocalDate.of(2026, 10, 1), LocalTime.NOON)
+        settings.settings.value = Settings(PackType.WITH_BREAK, LocalDate.of(2026, 10, 1), LocalTime.NOON)
         val clock = clockAt(LocalDate.of(2026, 10, 21), LocalTime.NOON) // pill 21
         val vm = HomeViewModel(clock, MONDAY, repo, settings)
         assertEquals(DayKind.ACTIVE, vm.state.value.dayKind)
         clock.instant = clock.instant.plusSeconds(24 * 3600) // day 22
         vm.onEvent(HomeUiEvent.Resumed)
         assertEquals(DayKind.BREAK, vm.state.value.dayKind)
-        settings.settings.value = settings.settings.value?.copy(packType = PackType.TWENTY_EIGHT)
+        settings.settings.value = settings.settings.value?.copy(packType = PackType.WITH_PLACEBO)
         assertEquals(DayKind.PLACEBO, vm.state.value.dayKind)
     }
 
     @Test
     fun calendarMarksBreakAndPlaceboDays() {
-        settings.settings.value = Settings(PackType.TWENTY_ONE_PLUS_SEVEN, LocalDate.of(2026, 10, 1), LocalTime.NOON)
+        settings.settings.value = Settings(PackType.WITH_BREAK, LocalDate.of(2026, 10, 1), LocalTime.NOON)
         val vm = HomeViewModel(clockAt(LocalDate.of(2026, 10, 25), LocalTime.NOON), MONDAY, repo, settings)
         val cells = vm.state.value.weeks.flatten().filterNotNull()
         assertEquals(DayStatus.NOT_TAKEN, cells.first { it.date.dayOfMonth == 21 }.status)
         assertEquals(DayStatus.BREAK, cells.first { it.date.dayOfMonth == 22 }.status) // past break: never "not taken"
         assertEquals(DayStatus.BREAK, cells.first { it.date.dayOfMonth == 27 }.status) // future break too
 
-        settings.settings.value = settings.settings.value?.copy(packType = PackType.TWENTY_EIGHT)
+        settings.settings.value = settings.settings.value?.copy(packType = PackType.WITH_PLACEBO)
         val placebo = vm.state.value.weeks.flatten().filterNotNull().first { it.date.dayOfMonth == 22 }
         assertEquals(DayStatus.NOT_TAKEN, placebo.status)
         assertTrue(placebo.isPlacebo)
@@ -288,7 +288,7 @@ class ViewModelsTest {
         assertEquals(DayStatus.TAKEN, vm.state.value.weeks.flatten().filterNotNull().single { it.isToday }.status)
     }
 
-    private val saved = Settings(PackType.TWENTY_ONE_PLUS_SEVEN, LocalDate.of(2026, 10, 1), LocalTime.of(9, 0))
+    private val saved = Settings(PackType.WITH_BREAK, LocalDate.of(2026, 10, 1), LocalTime.of(9, 0))
 
     @Test
     fun settingsShowsSavedAnswersAndNewTimeReschedules() {
@@ -322,7 +322,7 @@ class ViewModelsTest {
 
     @Test
     fun realigningThePackKeepsHistoryAndMovesOnlyThePackStart() {
-        settings.settings.value = saved // 21+7 from Oct 1: Oct 6 is day 6
+        settings.settings.value = saved // 21 pills from Oct 1: Oct 6 is day 6
         repo.intakes.value = mapOf(LocalDate.of(2026, 10, 2) to Instant.EPOCH)
         val vm = SettingsViewModel(clockAt(oct6, LocalTime.NOON), settings, scheduler)
         assertEquals(6, vm.state.value.dayOfPack)

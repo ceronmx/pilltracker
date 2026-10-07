@@ -49,8 +49,8 @@ class ReminderReceiverTest {
     }
 
     @Test fun remindsOnAPillDay() {
-        // Device date: pill 1 of a 21+7 pack starting today.
-        assertEquals(1, fireWith(Settings(PackType.TWENTY_ONE_PLUS_SEVEN, LocalDate.now(DeviceClock), LocalTime.NOON)))
+        // Device date: pill 1 of a 21-pill pack starting today.
+        assertEquals(1, fireWith(Settings(PackType.WITH_BREAK, LocalDate.now(DeviceClock), LocalTime.NOON)))
     }
 
     @Test fun silentOnABreakDay() {
@@ -58,7 +58,7 @@ class ReminderReceiverTest {
         assertEquals(
             0,
             fireWith(
-                Settings(PackType.TWENTY_ONE_PLUS_SEVEN, LocalDate.now(DeviceClock).minusDays(21), LocalTime.NOON),
+                Settings(PackType.WITH_BREAK, LocalDate.now(DeviceClock).minusDays(21), LocalTime.NOON),
             ),
         )
     }

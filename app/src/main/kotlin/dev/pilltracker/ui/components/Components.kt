@@ -122,7 +122,7 @@ fun TakenButton(
     }
 }
 
-/** 28 (preselected) or 21+7 (AC1.1). */
+/** 21 + 7 (preselected) or 21 pills (AC1.1). */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PackTypeSelector(
@@ -131,7 +131,7 @@ fun PackTypeSelector(
     modifier: Modifier = Modifier,
 ) {
     val options =
-        listOf(PackType.TWENTY_EIGHT to R.string.pack_28, PackType.TWENTY_ONE_PLUS_SEVEN to R.string.pack_21_7)
+        listOf(PackType.WITH_PLACEBO to R.string.pack_placebo, PackType.WITH_BREAK to R.string.pack_break)
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(stringResource(R.string.pack_type_label), style = MaterialTheme.typography.bodyLarge)
         SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
@@ -202,7 +202,7 @@ private fun TakenButtonTakenPreview() = PillTrackerTheme { TakenButton(taken = t
 
 @PillPreviews
 @Composable
-private fun PackTypeSelectorPreview() = PillTrackerTheme { PackTypeSelector(PackType.TWENTY_EIGHT, {}) }
+private fun PackTypeSelectorPreview() = PillTrackerTheme { PackTypeSelector(PackType.WITH_PLACEBO, {}) }
 
 @PillPreviews
 @Composable

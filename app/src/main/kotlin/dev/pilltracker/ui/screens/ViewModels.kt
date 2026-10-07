@@ -46,13 +46,13 @@ private fun kindOf(
 ) = settings?.let { dayKind(it.packType, it.packStart, date) } ?: DayKind.ACTIVE
 
 data class SetupUiState(
-    val packType: PackType = PackType.TWENTY_EIGHT,
+    val packType: PackType = PackType.WITH_PLACEBO,
     val pillNumber: Int = 1,
     val time: LocalTime = DEFAULT_REMINDER_TIME,
     val showTimePicker: Boolean = false,
     val permissionDenied: Boolean = false,
 ) {
-    /** What the chosen day is, so 21+7 days 22-28 read as break days (AC1.1). */
+    /** What the chosen day is, so 21-pill days 22-28 read as break days (AC1.1). */
     val dayKind: DayKind get() = dayKind(packType, packStart(REFERENCE_DAY, pillNumber), REFERENCE_DAY)
 }
 

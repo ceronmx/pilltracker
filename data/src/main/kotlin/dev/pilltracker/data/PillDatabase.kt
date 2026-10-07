@@ -94,6 +94,9 @@ class RoomIntakeRepository(private val dao: IntakeDao) : IntakeRepository {
     ) = dao.insert(IntakeEntity(day.toEpochDay(), at.toEpochMilli()))
 }
 
+/** Stored codes are fixed: renaming PackType must not break saved settings (installed 0.1 used these). */
+private val PACK_CODES = mapOf(PackType.WITH_PLACEBO to "TWENTY_EIGHT", PackType.WITH_BREAK to "TWENTY_ONE_PLUS_SEVEN")
+
 class RoomSettingsRepository(private val db: PillDatabase) : SettingsRepository {
     private val dao = db.settingsDao()
 
@@ -101,7 +104,7 @@ class RoomSettingsRepository(private val db: PillDatabase) : SettingsRepository 
         dao.settings().map { e ->
             e?.let {
                 Settings(
-                    PackType.valueOf(it.packType),
+                    PACK_CODES.entries.first { (_, code) -> code == it.packType }.key,
                     LocalDate.ofEpochDay(it.packStartEpochDay),
                     LocalTime.ofSecondOfDay(it.reminderMinuteOfDay * SECONDS_PER_MINUTE),
                 )
@@ -111,7 +114,7 @@ class RoomSettingsRepository(private val db: PillDatabase) : SettingsRepository 
     override suspend fun save(settings: Settings) =
         dao.save(
             SettingsEntity(
-                packType = settings.packType.name,
+                packType = PACK_CODES.getValue(settings.packType),
                 packStartEpochDay = settings.packStart.toEpochDay(),
                 reminderMinuteOfDay = settings.reminderTime.toSecondOfDay() / SECONDS_PER_MINUTE.toInt(),
             ),

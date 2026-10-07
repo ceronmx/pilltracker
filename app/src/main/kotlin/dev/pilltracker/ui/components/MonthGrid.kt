@@ -42,7 +42,7 @@ import java.time.format.FormatStyle
 import java.time.format.TextStyle
 import java.time.temporal.WeekFields
 
-/** BREAK = a 21+7 pill-free day; never shown as "not taken" (AC4.1). */
+/** BREAK = a pill-free day of a 21-pill pack; never shown as "not taken" (AC4.1). */
 enum class DayStatus { TAKEN, NOT_TAKEN, UPCOMING, BREAK }
 
 data class DayCell(

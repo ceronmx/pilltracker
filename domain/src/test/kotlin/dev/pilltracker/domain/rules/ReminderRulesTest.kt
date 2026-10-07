@@ -58,8 +58,8 @@ class ReminderRulesTest {
 
     @Test
     fun remindOnActiveAndPlaceboDaysNotOnBreakOrWhenTaken() {
-        val pack21 = Settings(PackType.TWENTY_ONE_PLUS_SEVEN, LocalDate.of(2026, 10, 1), nine)
-        val pack28 = pack21.copy(packType = PackType.TWENTY_EIGHT)
+        val pack21 = Settings(PackType.WITH_BREAK, LocalDate.of(2026, 10, 1), nine)
+        val pack28 = pack21.copy(packType = PackType.WITH_PLACEBO)
         assertTrue(shouldRemind(pack21, LocalDate.of(2026, 10, 21), taken = false))
         assertFalse(shouldRemind(pack21, LocalDate.of(2026, 10, 22), taken = false))
         assertTrue(shouldRemind(pack28, LocalDate.of(2026, 10, 22), taken = false))

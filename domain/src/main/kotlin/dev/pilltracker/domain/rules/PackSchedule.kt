@@ -7,8 +7,8 @@ import java.time.temporal.ChronoUnit.DAYS
 const val PACK_DAYS = 28
 private const val ACTIVE_DAYS = 21
 
-/** 28 = 21 active + 7 placebo pills; 21+7 = 21 active pills + 7 days without pills. */
-enum class PackType { TWENTY_EIGHT, TWENTY_ONE_PLUS_SEVEN }
+/** "21 + 7" = 21 active + 7 placebo pills; "21 pills" = 21 active pills, then 7 days without pills. */
+enum class PackType { WITH_PLACEBO, WITH_BREAK }
 
 enum class DayKind { ACTIVE, PLACEBO, BREAK }
 
@@ -38,7 +38,7 @@ fun dayKind(
     val dayInCycle = dayInCycle(start, date)
     return when {
         dayInCycle < ACTIVE_DAYS -> DayKind.ACTIVE
-        type == PackType.TWENTY_EIGHT -> DayKind.PLACEBO
+        type == PackType.WITH_PLACEBO -> DayKind.PLACEBO
         else -> DayKind.BREAK
     }
 }

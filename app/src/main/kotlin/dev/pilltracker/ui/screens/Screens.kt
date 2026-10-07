@@ -166,7 +166,7 @@ fun SettingsSheet(
                 Text(stringResource(R.string.pack_type_label), Modifier.weight(1f))
                 Text(
                     stringResource(
-                        if (settings.packType == PackType.TWENTY_EIGHT) R.string.pack_28 else R.string.pack_21_7,
+                        if (settings.packType == PackType.WITH_PLACEBO) R.string.pack_placebo else R.string.pack_break,
                     ),
                 )
             }
