@@ -10,3 +10,4 @@ Every dependency needs a reason here. No networking, analytics or crash-reportin
 | Hilt (`hilt-android`, compiler) + KSP | Constructor injection, required by CLAUDE.md; KSP over kapt for build speed | c3v |
 | ktlint (jlleitschuh gradle plugin) | Code style gate in `check` (CLAUDE.md) | qpi |
 | detekt | Static analysis gate in `check` (CLAUDE.md) | qpi |
+| Compose `ui-test-junit4` + `ui-test-manifest` (debug), `androidx.test:runner` | Instrumented Compose UI tests; `DeviceConfigurationOverride.Locales` for en/es coverage (AC5.5). Test/debug only, not in release | hex |

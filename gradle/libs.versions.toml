@@ -5,6 +5,7 @@ composeCompiler = "1.5.15"
 composeBom = "2024.09.03"
 activityCompose = "1.9.2"
 junit5 = "5.11.2"
+androidxTestRunner = "1.6.2"
 hilt = "2.51.1"
 ksp = "1.9.25-1.0.20"
 ktlint = "12.1.2"
@@ -17,6 +18,9 @@ activity-compose = { module = "androidx.activity:activity-compose", version.ref 
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
 hilt-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hilt" }
 junit5 = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit5" }
+compose-ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4" }
+compose-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest" }
+androidx-test-runner = { module = "androidx.test:runner", version.ref = "androidxTestRunner" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

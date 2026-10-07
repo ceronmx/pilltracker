@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">PillTracker</string>
+    <string name="notification_channel_name">Recordatorio diario</string>
+    <string name="notification_title">Es hora de tu registro diario</string>
 </resources>

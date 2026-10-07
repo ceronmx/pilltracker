@@ -1,3 +1,6 @@
 <resources>
     <string name="app_name">PillTracker</string>
+    <!-- Notification wording stays neutral: it may be seen by others (CLAUDE.md hard constraint 4). -->
+    <string name="notification_channel_name">Daily reminder</string>
+    <string name="notification_title">Time for your daily check-in</string>
 </resources>
