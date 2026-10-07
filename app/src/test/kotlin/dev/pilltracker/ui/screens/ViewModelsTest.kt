@@ -93,6 +93,13 @@ class ViewModelsTest {
     }
 
     @Test
+    fun deniedNotificationsShowTheNotice() {
+        val vm = SetupViewModel(clockAt(oct6, LocalTime.NOON), settings)
+        vm.onEvent(SetupUiEvent.NotificationsDenied)
+        assertTrue(vm.state.value.permissionDenied)
+    }
+
+    @Test
     fun pillNumberStaysWithinThePack() {
         val vm = SetupViewModel(clockAt(oct6, LocalTime.NOON), settings)
         vm.onEvent(SetupUiEvent.PillNumberChanged(0))

@@ -66,6 +66,9 @@ sealed interface SetupUiEvent {
 
     data object PickerDismissed : SetupUiEvent
 
+    /** The notification permission request came back denied (AC1.3). */
+    data object NotificationsDenied : SetupUiEvent
+
     /** Enable or Continue: store the answers (AC1.4). */
     data object Save : SetupUiEvent
 }
@@ -89,6 +92,7 @@ class SetupViewModel
                     SetupUiEvent.TimeClicked -> it.copy(showTimePicker = true)
                     is SetupUiEvent.TimePicked -> it.copy(time = event.time, showTimePicker = false)
                     SetupUiEvent.PickerDismissed -> it.copy(showTimePicker = false)
+                    SetupUiEvent.NotificationsDenied -> it.copy(permissionDenied = true)
                     SetupUiEvent.Save -> it
                 }
             }

@@ -1,13 +1,21 @@
 package dev.pilltracker
 
+import android.Manifest
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
+import android.provider.Settings
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.app.NotificationManagerCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
@@ -53,13 +61,7 @@ private fun PillTrackerNavHost(start: Route) {
     NavHost(nav, startDestination = start.name) {
         composable(Route.Setup.name) {
             // Setup is left behind for good: Home replaces it so Back exits the app.
-            val vm: SetupViewModel = hiltViewModel()
-            val state by vm.state.collectAsState()
-            val toHome = {
-                vm.onEvent(SetupUiEvent.Save)
-                nav.navigate(Route.Home.name) { popUpTo(Route.Setup.name) { inclusive = true } }
-            }
-            SetupScreen(state, vm::onEvent, onEnable = toHome, onContinueWithout = toHome)
+            SetupRoute { nav.navigate(Route.Home.name) { popUpTo(Route.Setup.name) { inclusive = true } } }
         }
         composable(Route.Home.name) {
             val vm: HomeViewModel = hiltViewModel()
@@ -74,3 +76,41 @@ private fun PillTrackerNavHost(start: Route) {
         }
     }
 }
+
+/** Enable asks for notifications only (ADR 0004); denial shows the notice with retry (AC1.2, AC1.3). */
+@Composable
+private fun SetupRoute(onDone: () -> Unit) {
+    val vm: SetupViewModel = hiltViewModel()
+    val state by vm.state.collectAsState()
+    val context = LocalContext.current
+    val finish = {
+        vm.onEvent(SetupUiEvent.Save)
+        onDone()
+    }
+    val request =
+        rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            if (granted) finish() else vm.onEvent(SetupUiEvent.NotificationsDenied)
+        }
+    // Back from the app's notification settings: carry on by itself once allowed.
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        if (state.permissionDenied && notificationsAllowed(context)) finish()
+    }
+    SetupScreen(
+        state,
+        vm::onEvent,
+        onEnable = {
+            when {
+                notificationsAllowed(context) -> finish() // API < 33, or already granted
+                // Retry: the system stops showing the dialog after repeated denials; Settings always works.
+                state.permissionDenied -> context.startActivity(appNotificationSettings(context))
+                else -> request.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        },
+        onContinueWithout = finish,
+    )
+}
+
+private fun notificationsAllowed(context: Context) = NotificationManagerCompat.from(context).areNotificationsEnabled()
+
+private fun appNotificationSettings(context: Context) =
+    Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)

@@ -16,3 +16,4 @@ Every dependency needs a reason here. No networking, analytics or crash-reportin
 | `hilt-navigation-compose` | `hiltViewModel()` scoped to each nav destination | 2fg |
 | Room (`room-runtime`, `room-ktx`, compiler via KSP, `room-testing`) + `androidx.room` Gradle plugin | Local storage with exported schemas for migration tests (ADR 0003) | r5w |
 | `kotlinx-coroutines-core` (+ `-test`) | `Flow` in domain repository interfaces; `setMain` in ViewModel tests | r5w |
+| `androidx.test:rules` | `GrantPermissionRule` for `POST_NOTIFICATIONS` in instrumented tests (test only) | gcc |
