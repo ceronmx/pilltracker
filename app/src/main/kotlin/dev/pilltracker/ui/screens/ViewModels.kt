@@ -51,6 +51,8 @@ data class SetupUiState(
     val time: LocalTime = DEFAULT_REMINDER_TIME,
     val showTimePicker: Boolean = false,
     val permissionDenied: Boolean = false,
+    /** Settings are written and the reminder scheduled: only now may Setup be left (AC1.4). */
+    val saved: Boolean = false,
 ) {
     /** What the chosen day is, so 21-pill days 22-28 read as break days (AC1.1). */
     val dayKind: DayKind get() = dayKind(packType, packStart(REFERENCE_DAY, pillNumber), REFERENCE_DAY)
@@ -106,6 +108,7 @@ class SetupViewModel
             viewModelScope.launch {
                 settings.save(Settings(s.packType, start, s.time))
                 reminders.scheduleNext(s.time)
+                _state.update { it.copy(saved = true) }
             }
         }
     }

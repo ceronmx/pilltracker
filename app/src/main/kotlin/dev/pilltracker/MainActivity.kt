@@ -100,10 +100,9 @@ private fun SetupRoute(onDone: () -> Unit) {
     val vm: SetupViewModel = hiltViewModel()
     val state by vm.state.collectAsState()
     val context = LocalContext.current
-    val finish = {
-        vm.onEvent(SetupUiEvent.Save)
-        onDone()
-    }
+    val finish = { vm.onEvent(SetupUiEvent.Save) }
+    // Leave only once saved: popping Setup clears its ViewModel and would cancel the write (u0i).
+    LaunchedEffect(state.saved) { if (state.saved) onDone() }
     val request =
         rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
             if (granted) finish() else vm.onEvent(SetupUiEvent.NotificationsDenied)

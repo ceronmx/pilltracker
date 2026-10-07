@@ -150,7 +150,9 @@ class ViewModelsTest {
         vm.onEvent(SetupUiEvent.PackTypeChosen(PackType.WITH_BREAK))
         vm.onEvent(SetupUiEvent.PillNumberChanged(6))
         vm.onEvent(SetupUiEvent.TimePicked(LocalTime.of(22, 0)))
+        assertFalse(vm.state.value.saved)
         vm.onEvent(SetupUiEvent.Save)
+        assertTrue(vm.state.value.saved) // only now may the screen leave, or leaving cancels the write (u0i)
         assertEquals(
             Settings(PackType.WITH_BREAK, LocalDate.of(2026, 10, 1), LocalTime.of(22, 0)),
             settings.settings.value,
