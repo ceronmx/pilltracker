@@ -20,3 +20,4 @@ Start with only `:app` and `:domain` (JVM). Add `:data` and `:platform` with the
 
 ## Amendments
 - 2026-10-06 (2fg): switched from a custom `Clock` interface + `FakeClock` to `java.time.Clock` + `Clock.fixed`; same guarantees, no extra types.
+- 2026-10-06 (54c): platform code (alarms, receivers, notification, `DeviceClock`) lives in the `:app` `platform` package; a separate `:platform` module adds nothing while `:app` is its only consumer. `:data` was added in r5w (ADR 0003).

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.pilltracker.domain.IntakeRepository
+import dev.pilltracker.domain.ReminderScheduler
 import dev.pilltracker.domain.Settings
 import dev.pilltracker.domain.SettingsRepository
 import dev.pilltracker.domain.rules.DayKind
@@ -79,6 +80,7 @@ class SetupViewModel
     constructor(
         private val clock: Clock,
         private val settings: SettingsRepository,
+        private val reminders: ReminderScheduler,
     ) : ViewModel() {
         private val _state = MutableStateFlow(SetupUiState())
         val state: StateFlow<SetupUiState> = _state.asStateFlow()
@@ -103,7 +105,10 @@ class SetupViewModel
         private fun save() {
             val s = _state.value
             val start = packStart(LocalDate.now(clock), s.pillNumber)
-            viewModelScope.launch { settings.save(Settings(s.packType, start, s.time)) }
+            viewModelScope.launch {
+                settings.save(Settings(s.packType, start, s.time))
+                reminders.scheduleNext(s.time)
+            }
         }
     }
 

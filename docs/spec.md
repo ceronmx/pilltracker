@@ -9,7 +9,7 @@ A 100% local Android app: remind one person to take a daily pill, log it in one 
 - AC1.4 Answers are saved; later launches open Home. The pack repeats every 28 days from the day of pill 1.
 
 ## 2. Reminder
-- AC2.1 A notification fires daily within about 10 minutes after the chosen time (inexact alarm, ADR 0004), except on break days (21+7, days 22-28) (local zone; re-scheduled after reboot, time-zone change, and DST change).
+- AC2.1 A notification fires daily within 10 minutes after the chosen time while the phone is in use; on an idle phone it may wait until the phone wakes (inexact alarm, ADR 0004), except on break days (21+7, days 22-28) (local zone; re-scheduled after reboot, time-zone change, and DST change).
 - AC2.2 Notification text is neutral ("Time for your daily check-in"), visibility `SECRET`.
 - AC2.3 The notification has a **Taken** action: one tap logs today's pill, dismisses the notification, no app launch.
 

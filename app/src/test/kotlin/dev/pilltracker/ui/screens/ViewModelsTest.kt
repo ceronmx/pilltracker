@@ -1,6 +1,7 @@
 package dev.pilltracker.ui.screens
 
 import dev.pilltracker.domain.IntakeRepository
+import dev.pilltracker.domain.ReminderScheduler
 import dev.pilltracker.domain.Settings
 import dev.pilltracker.domain.SettingsRepository
 import dev.pilltracker.domain.rules.DayKind
@@ -52,6 +53,14 @@ class InMemorySettingsRepository(initial: Settings? = null) : SettingsRepository
     }
 }
 
+class FakeReminderScheduler : ReminderScheduler {
+    val scheduled = mutableListOf<LocalTime>()
+
+    override fun scheduleNext(time: LocalTime) {
+        scheduled += time
+    }
+}
+
 /** A clock tests can move forward or across zones. */
 class MutableClock(var instant: Instant, var zoneId: ZoneId) : Clock() {
     override fun getZone() = zoneId
@@ -66,6 +75,7 @@ class ViewModelsTest {
     private val madrid = ZoneId.of("Europe/Madrid")
     private val repo = InMemoryIntakeRepository()
     private val settings = InMemorySettingsRepository()
+    private val scheduler = FakeReminderScheduler()
     private val oct6 = LocalDate.of(2026, 10, 6)
 
     private fun clockAt(
@@ -80,7 +90,7 @@ class ViewModelsTest {
 
     @Test
     fun setupDefaultsAndPickerUpdatesTime() {
-        val vm = SetupViewModel(clockAt(oct6, LocalTime.NOON), settings)
+        val vm = SetupViewModel(clockAt(oct6, LocalTime.NOON), settings, scheduler)
         assertEquals(SetupUiState(), vm.state.value)
         assertEquals(PackType.TWENTY_EIGHT, vm.state.value.packType)
         assertEquals(1, vm.state.value.pillNumber)
@@ -94,14 +104,14 @@ class ViewModelsTest {
 
     @Test
     fun deniedNotificationsShowTheNotice() {
-        val vm = SetupViewModel(clockAt(oct6, LocalTime.NOON), settings)
+        val vm = SetupViewModel(clockAt(oct6, LocalTime.NOON), settings, scheduler)
         vm.onEvent(SetupUiEvent.NotificationsDenied)
         assertTrue(vm.state.value.permissionDenied)
     }
 
     @Test
     fun pillNumberStaysWithinThePack() {
-        val vm = SetupViewModel(clockAt(oct6, LocalTime.NOON), settings)
+        val vm = SetupViewModel(clockAt(oct6, LocalTime.NOON), settings, scheduler)
         vm.onEvent(SetupUiEvent.PillNumberChanged(0))
         assertEquals(1, vm.state.value.pillNumber)
         vm.onEvent(SetupUiEvent.PillNumberChanged(29))
@@ -113,7 +123,7 @@ class ViewModelsTest {
 
     @Test
     fun saveStoresPackStartFromTodaysPill() {
-        val vm = SetupViewModel(clockAt(oct6, LocalTime.NOON), settings)
+        val vm = SetupViewModel(clockAt(oct6, LocalTime.NOON), settings, scheduler)
         vm.onEvent(SetupUiEvent.PackTypeChosen(PackType.TWENTY_ONE_PLUS_SEVEN))
         vm.onEvent(SetupUiEvent.PillNumberChanged(6))
         vm.onEvent(SetupUiEvent.TimePicked(LocalTime.of(22, 0)))
@@ -122,6 +132,7 @@ class ViewModelsTest {
             Settings(PackType.TWENTY_ONE_PLUS_SEVEN, LocalDate.of(2026, 10, 1), LocalTime.of(22, 0)),
             settings.settings.value,
         )
+        assertEquals(listOf(LocalTime.of(22, 0)), scheduler.scheduled)
     }
 
     @Test

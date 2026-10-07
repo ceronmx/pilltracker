@@ -2,6 +2,7 @@ package dev.pilltracker
 
 import android.Manifest
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -21,6 +22,10 @@ class NavigationTest {
     private fun str(id: Int) = rule.activity.getString(id)
 
     @Test fun enableLeadsHomeThenTakenThenHistory() {
+        // The start screen appears once settings are read from Room, which Compose tests don't wait for.
+        rule.waitUntil(
+            5_000,
+        ) { rule.onAllNodesWithText(str(R.string.enable_reminders)).fetchSemanticsNodes().isNotEmpty() }
         rule.onNodeWithText(str(R.string.enable_reminders)).performClick()
         rule.onNodeWithText(str(R.string.taken)).performClick()
         rule.onNodeWithText(str(R.string.taken_today)).assertExists()
