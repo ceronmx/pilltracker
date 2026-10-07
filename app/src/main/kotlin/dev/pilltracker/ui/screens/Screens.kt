@@ -161,6 +161,7 @@ fun SettingsSheet(
         ) {
             Text(stringResource(R.string.settings), style = MaterialTheme.typography.headlineSmall)
             TimeSelector(settings.reminderTime, { onEvent(SettingsUiEvent.TimeClicked) })
+            PillNumberStepper(state.dayOfPack, state.breakDay, { onEvent(SettingsUiEvent.DayOfPackChanged(it)) })
             Row {
                 Text(stringResource(R.string.pack_type_label), Modifier.weight(1f))
                 Text(

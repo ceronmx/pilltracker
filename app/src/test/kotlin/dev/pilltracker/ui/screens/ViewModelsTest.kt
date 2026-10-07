@@ -293,7 +293,7 @@ class ViewModelsTest {
     @Test
     fun settingsShowsSavedAnswersAndNewTimeReschedules() {
         settings.settings.value = saved
-        val vm = SettingsViewModel(settings, scheduler)
+        val vm = SettingsViewModel(clockAt(oct6, LocalTime.NOON), settings, scheduler)
         assertEquals(saved, vm.state.value.settings)
         vm.onEvent(SettingsUiEvent.TimeClicked)
         assertTrue(vm.state.value.showTimePicker)
@@ -306,7 +306,7 @@ class ViewModelsTest {
     @Test
     fun resetAsksFirstThenDeletesEverythingAndCancelsTheReminder() {
         settings.settings.value = saved
-        val vm = SettingsViewModel(settings, scheduler)
+        val vm = SettingsViewModel(clockAt(oct6, LocalTime.NOON), settings, scheduler)
         vm.onEvent(SettingsUiEvent.ResetClicked)
         assertTrue(vm.state.value.confirmReset)
         vm.onEvent(SettingsUiEvent.ResetDismissed)
@@ -318,5 +318,23 @@ class ViewModelsTest {
         assertEquals(null, settings.settings.value)
         assertTrue(scheduler.cancelled)
         assertTrue(vm.state.value.resetDone)
+    }
+
+    @Test
+    fun realigningThePackKeepsHistoryAndMovesOnlyThePackStart() {
+        settings.settings.value = saved // 21+7 from Oct 1: Oct 6 is day 6
+        repo.intakes.value = mapOf(LocalDate.of(2026, 10, 2) to Instant.EPOCH)
+        val vm = SettingsViewModel(clockAt(oct6, LocalTime.NOON), settings, scheduler)
+        assertEquals(6, vm.state.value.dayOfPack)
+        assertFalse(vm.state.value.breakDay)
+
+        vm.onEvent(SettingsUiEvent.DayOfPackChanged(24)) // she is actually in her break week
+        assertEquals(saved.copy(packStart = oct6.minusDays(23)), settings.settings.value)
+        assertEquals(24, vm.state.value.dayOfPack)
+        assertTrue(vm.state.value.breakDay)
+        assertEquals(setOf(LocalDate.of(2026, 10, 2)), repo.intakes.value.keys)
+
+        vm.onEvent(SettingsUiEvent.DayOfPackChanged(29))
+        assertEquals(28, vm.state.value.dayOfPack) // stays within the pack
     }
 }

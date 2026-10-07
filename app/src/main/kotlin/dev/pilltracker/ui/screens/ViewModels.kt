@@ -11,6 +11,7 @@ import dev.pilltracker.domain.rules.DayKind
 import dev.pilltracker.domain.rules.PACK_DAYS
 import dev.pilltracker.domain.rules.PackType
 import dev.pilltracker.domain.rules.dayKind
+import dev.pilltracker.domain.rules.dayOfPack
 import dev.pilltracker.domain.rules.monthLayout
 import dev.pilltracker.domain.rules.packStart
 import dev.pilltracker.ui.components.DayCell
@@ -207,6 +208,9 @@ class HomeViewModel
 /** Settings sheet on Home (AC7.1-7.3). */
 data class SettingsUiState(
     val settings: Settings? = null,
+    /** Today's day of the pack, 1-28; editable to realign a pack started late or early. */
+    val dayOfPack: Int = 1,
+    val breakDay: Boolean = false,
     val showTimePicker: Boolean = false,
     val confirmReset: Boolean = false,
     /** All data is gone: leave for Setup. */
@@ -220,6 +224,8 @@ sealed interface SettingsUiEvent {
 
     data object PickerDismissed : SettingsUiEvent
 
+    data class DayOfPackChanged(val day: Int) : SettingsUiEvent
+
     data object ResetClicked : SettingsUiEvent
 
     data object ResetDismissed : SettingsUiEvent
@@ -231,13 +237,21 @@ sealed interface SettingsUiEvent {
 class SettingsViewModel
     @Inject
     constructor(
+        private val clock: Clock,
         private val settings: SettingsRepository,
         private val reminders: ReminderScheduler,
     ) : ViewModel() {
         private val ui = MutableStateFlow(SettingsUiState())
 
         val state: StateFlow<SettingsUiState> =
-            combine(ui, settings.settings) { u, s -> u.copy(settings = s) }
+            combine(ui, settings.settings) { u, s ->
+                val today = LocalDate.now(clock)
+                u.copy(
+                    settings = s,
+                    dayOfPack = s?.let { dayOfPack(it.packStart, today) } ?: 1,
+                    breakDay = kindOf(s, today) == DayKind.BREAK,
+                )
+            }
                 .stateIn(viewModelScope, SharingStarted.Eagerly, ui.value)
 
         fun onEvent(event: SettingsUiEvent) {
@@ -250,6 +264,17 @@ class SettingsViewModel
                     viewModelScope.launch {
                         settings.save(current.copy(reminderTime = event.time))
                         reminders.scheduleNext(event.time)
+                    }
+                }
+                is SettingsUiEvent.DayOfPackChanged -> {
+                    val current = state.value.settings ?: return
+                    val day = event.day.coerceIn(1, PACK_DAYS)
+                    // ponytail: one pack start, so past break/placebo marks shift with it; keep a start
+                    // history if she needs exact past packs. Intake records are untouched.
+                    viewModelScope.launch {
+                        settings.save(
+                            current.copy(packStart = packStart(LocalDate.now(clock), day)),
+                        )
                     }
                 }
                 SettingsUiEvent.ResetClicked -> ui.update { it.copy(confirmReset = true) }

@@ -32,6 +32,15 @@ class PackScheduleTest {
     }
 
     @Test
+    fun dayOfPackInvertsPackStartAndRepeats() {
+        assertEquals(1, dayOfPack(start, day(1)))
+        assertEquals(28, dayOfPack(start, day(28)))
+        assertEquals(1, dayOfPack(start, day(29))) // next pack
+        assertEquals(28, dayOfPack(start, day(0))) // day before pack 1: last day of the previous pack
+        (1..28).forEach { n -> assertEquals(n, dayOfPack(packStart(day(40), n), day(40))) }
+    }
+
+    @Test
     fun cycleRepeatsEvery28Days() {
         assertEquals(ACTIVE, dayKind(TWENTY_ONE_PLUS_SEVEN, start, day(29)))
         assertEquals(BREAK, dayKind(TWENTY_ONE_PLUS_SEVEN, start, day(28 * 10 + 22)))

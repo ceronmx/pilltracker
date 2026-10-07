@@ -18,13 +18,24 @@ fun packStart(
     pillNumber: Int,
 ): LocalDate = today.minusDays(pillNumber - 1L)
 
+/** Day 1-28 of the pack that [date] falls in; inverse of [packStart]. */
+fun dayOfPack(
+    start: LocalDate,
+    date: LocalDate,
+): Int = dayInCycle(start, date).toInt() + 1
+
+private fun dayInCycle(
+    start: LocalDate,
+    date: LocalDate,
+) = Math.floorMod(DAYS.between(start, date), PACK_DAYS.toLong())
+
 /** What [date] is in a pack cycle starting at [start]; the cycle repeats every 28 days, both directions. */
 fun dayKind(
     type: PackType,
     start: LocalDate,
     date: LocalDate,
 ): DayKind {
-    val dayInCycle = Math.floorMod(DAYS.between(start, date), PACK_DAYS.toLong())
+    val dayInCycle = dayInCycle(start, date)
     return when {
         dayInCycle < ACTIVE_DAYS -> DayKind.ACTIVE
         type == PackType.TWENTY_EIGHT -> DayKind.PLACEBO

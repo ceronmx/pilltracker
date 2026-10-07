@@ -149,11 +149,12 @@ class ScreensTest {
         rule.setContentIn("en") {
             PillTrackerTheme {
                 HomeScreen(sampleHome, {}, {})
-                SettingsSheet(SettingsUiState(saved, confirmReset = true), {}, {})
+                SettingsSheet(SettingsUiState(saved, dayOfPack = 24, breakDay = true, confirmReset = true), {}, {})
             }
         }
         rule.onNodeWithContentDescription("Settings").assertExists()
         rule.onNodeWithText("21 + 7 break").assertExists()
+        rule.onNodeWithText("Day 24 of 28 · break").assertExists()
         rule.onNodeWithText("Delete all data?").assertExists()
         rule.onNodeWithText("Delete").assertExists()
     }
