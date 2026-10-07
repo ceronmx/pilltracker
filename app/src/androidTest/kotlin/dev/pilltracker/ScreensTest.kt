@@ -1,9 +1,16 @@
 package dev.pilltracker
 
+import androidx.compose.ui.test.DeviceConfigurationOverride
+import androidx.compose.ui.test.FontScale
+import androidx.compose.ui.test.ForcedSize
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.then
+import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.unit.dp
 import dev.pilltracker.domain.rules.DayKind
 import dev.pilltracker.ui.preview.Sample
 import dev.pilltracker.ui.screens.HistoryScreen
@@ -65,6 +72,17 @@ class ScreensTest {
         setup("es")
         rule.onNodeWithText("¿Qué pastilla toca hoy?").assertExists()
         rule.onNodeWithText("Pastilla 1 de 28").assertExists()
+    }
+
+    /** Small phone at 2x font: the form scrolls, the action button stays on screen (sv7). */
+    @Test fun setupDeniedFitsSmallScreenLargeFont() {
+        rule.setContent {
+            DeviceConfigurationOverride(
+                DeviceConfigurationOverride.FontScale(2f) then
+                    DeviceConfigurationOverride.ForcedSize(DpSize(320.dp, 480.dp)),
+            ) { PillTrackerTheme { SetupScreen(SetupUiState(permissionDenied = true), {}, {}, {}) } }
+        }
+        rule.onNodeWithText("Continue without reminders").assertIsDisplayed()
     }
 
     @Test fun homeBreakDayEn() {

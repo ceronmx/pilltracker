@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -61,11 +63,16 @@ fun SetupScreen(
     onContinueWithout: () -> Unit,
 ) {
     ScreenFrame(stringResource(R.string.setup_title)) {
-        PackTypeSelector(state.packType, { onEvent(SetupUiEvent.PackTypeChosen(it)) })
-        PillNumberStepper(state.pillNumber, state.maxPillNumber, { onEvent(SetupUiEvent.PillNumberChanged(it)) })
-        TimeSelector(state.time, { onEvent(SetupUiEvent.TimeClicked) })
-        if (state.permissionDenied) PermissionNotice(onEnable)
-        Spacer(Modifier.weight(1f))
+        // Only the form scrolls, so the action button stays on screen on small phones / large fonts.
+        Column(
+            Modifier.weight(1f).verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            PackTypeSelector(state.packType, { onEvent(SetupUiEvent.PackTypeChosen(it)) })
+            PillNumberStepper(state.pillNumber, state.maxPillNumber, { onEvent(SetupUiEvent.PillNumberChanged(it)) })
+            TimeSelector(state.time, { onEvent(SetupUiEvent.TimeClicked) })
+            if (state.permissionDenied) PermissionNotice(onEnable)
+        }
         if (state.permissionDenied) {
             TextButton(onContinueWithout, Modifier.align(Alignment.CenterHorizontally)) {
                 Text(stringResource(R.string.continue_without_reminders))
