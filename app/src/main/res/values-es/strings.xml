@@ -6,6 +6,13 @@
     <!-- Setup -->
     <string name="setup_title">Configura tu recordatorio diario</string>
     <string name="reminder_time_label">Hora del recordatorio</string>
+    <string name="pack_type_label">Tipo de blíster</string>
+    <string name="pack_28">28 pastillas</string>
+    <string name="pack_21_7">21 + 7 descanso</string>
+    <string name="pill_number_label">¿Qué pastilla toca hoy?</string>
+    <string name="pill_number_value">Pastilla %1$d de %2$d</string>
+    <string name="previous_pill">Pastilla anterior</string>
+    <string name="next_pill">Pastilla siguiente</string>
     <string name="enable_reminders">Activar recordatorios</string>
     <string name="continue_without_reminders">Continuar sin recordatorios</string>
     <string name="permission_denied">Los recordatorios están desactivados porque las notificaciones no están permitidas. Puedes seguir registrando manualmente.</string>
@@ -16,6 +23,8 @@
     <!-- Home -->
     <string name="taken">Tomada</string>
     <string name="taken_today">Registrado hoy</string>
+    <string name="break_day">Día de descanso</string>
+    <string name="placebo_day">Día de placebo</string>
     <string name="history">Historial</string>
 
     <!-- History -->
@@ -23,4 +32,6 @@
     <string name="next_month">Mes siguiente</string>
     <string name="day_taken">%1$s, tomada</string>
     <string name="day_not_taken">%1$s, no tomada</string>
+    <string name="day_placebo">%1$s, placebo</string>
+    <string name="day_break">%1$s, día de descanso</string>
 </resources>

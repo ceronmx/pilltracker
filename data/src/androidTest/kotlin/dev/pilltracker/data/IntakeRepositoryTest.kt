@@ -2,6 +2,8 @@ package dev.pilltracker.data
 
 import androidx.room.Room
 import androidx.test.platform.app.InstrumentationRegistry
+import dev.pilltracker.domain.Settings
+import dev.pilltracker.domain.rules.PackType
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -9,6 +11,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalTime
 
 class IntakeRepositoryTest {
     private val db =
@@ -44,5 +47,28 @@ class IntakeRepositoryTest {
                 setOf(1, 15, 31).map { LocalDate.of(2026, 10, it) }.toSet(),
                 repo.takenDays(LocalDate.of(2026, 10, 1), LocalDate.of(2026, 10, 31)).first(),
             )
+        }
+}
+
+class SettingsRepositoryTest {
+    private val db =
+        Room.inMemoryDatabaseBuilder(
+            InstrumentationRegistry.getInstrumentation().targetContext,
+            PillDatabase::class.java,
+        )
+            .build()
+    private val repo = RoomSettingsRepository(db.settingsDao())
+
+    @After fun close() = db.close()
+
+    @Test fun nullUntilSavedThenRoundTripsAndOverwrites() =
+        runTest {
+            assertEquals(null, repo.settings.first())
+            val first = Settings(PackType.TWENTY_EIGHT, LocalDate.of(2026, 10, 1), LocalTime.of(9, 0))
+            repo.save(first)
+            assertEquals(first, repo.settings.first())
+            val second = Settings(PackType.TWENTY_ONE_PLUS_SEVEN, LocalDate.of(2026, 9, 20), LocalTime.of(21, 45))
+            repo.save(second)
+            assertEquals(second, repo.settings.first())
         }
 }

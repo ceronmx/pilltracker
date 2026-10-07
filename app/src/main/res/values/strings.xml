@@ -7,6 +7,13 @@
     <!-- Setup -->
     <string name="setup_title">Set your daily reminder</string>
     <string name="reminder_time_label">Reminder time</string>
+    <string name="pack_type_label">Pack type</string>
+    <string name="pack_28">28 pills</string>
+    <string name="pack_21_7">21 + 7 break</string>
+    <string name="pill_number_label">Which pill is today?</string>
+    <string name="pill_number_value">Pill %1$d of %2$d</string>
+    <string name="previous_pill">Previous pill</string>
+    <string name="next_pill">Next pill</string>
     <string name="enable_reminders">Enable reminders</string>
     <string name="continue_without_reminders">Continue without reminders</string>
     <string name="permission_denied">Reminders are off because notifications aren\'t allowed. You can still log manually.</string>
@@ -17,6 +24,8 @@
     <!-- Home -->
     <string name="taken">Taken</string>
     <string name="taken_today">Logged for today</string>
+    <string name="break_day">Break day</string>
+    <string name="placebo_day">Placebo day</string>
     <string name="history">History</string>
 
     <!-- History -->
@@ -24,4 +33,6 @@
     <string name="next_month">Next month</string>
     <string name="day_taken">%1$s, taken</string>
     <string name="day_not_taken">%1$s, not taken</string>
+    <string name="day_placebo">%1$s, placebo</string>
+    <string name="day_break">%1$s, break day</string>
 </resources>

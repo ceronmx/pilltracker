@@ -11,10 +11,14 @@ import androidx.room.Query
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import dev.pilltracker.domain.IntakeRepository
+import dev.pilltracker.domain.Settings
+import dev.pilltracker.domain.SettingsRepository
+import dev.pilltracker.domain.rules.PackType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalTime
 
 /** Pill day is stored as given, never derived from [takenAtMillis] (AC3.2). Primary key = one row per day. */
 @Entity(tableName = "intake")
@@ -36,9 +40,30 @@ interface IntakeDao {
     suspend fun insert(intake: IntakeEntity)
 }
 
-@Database(entities = [IntakeEntity::class], version = 1)
+/** Single row (id = 0) holding the setup answers. */
+@Entity(tableName = "settings")
+data class SettingsEntity(
+    @PrimaryKey val id: Int = 0,
+    val packType: String,
+    val packStartEpochDay: Long,
+    val reminderMinuteOfDay: Int,
+)
+
+@Dao
+interface SettingsDao {
+    @Query("SELECT * FROM settings WHERE id = 0")
+    fun settings(): Flow<SettingsEntity?>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun save(settings: SettingsEntity)
+}
+
+// ponytail: still version 1 because nothing has shipped; bump + MigrationTestHelper from the first release on.
+@Database(entities = [IntakeEntity::class, SettingsEntity::class], version = 1)
 abstract class PillDatabase : RoomDatabase() {
     abstract fun intakeDao(): IntakeDao
+
+    abstract fun settingsDao(): SettingsDao
 
     companion object {
         private const val NAME = "pills.db"
@@ -65,4 +90,30 @@ class RoomIntakeRepository(private val dao: IntakeDao) : IntakeRepository {
         day: LocalDate,
         at: Instant,
     ) = dao.insert(IntakeEntity(day.toEpochDay(), at.toEpochMilli()))
+}
+
+class RoomSettingsRepository(private val dao: SettingsDao) : SettingsRepository {
+    override val settings: Flow<Settings?> =
+        dao.settings().map { e ->
+            e?.let {
+                Settings(
+                    PackType.valueOf(it.packType),
+                    LocalDate.ofEpochDay(it.packStartEpochDay),
+                    LocalTime.ofSecondOfDay(it.reminderMinuteOfDay * SECONDS_PER_MINUTE),
+                )
+            }
+        }
+
+    override suspend fun save(settings: Settings) =
+        dao.save(
+            SettingsEntity(
+                packType = settings.packType.name,
+                packStartEpochDay = settings.packStart.toEpochDay(),
+                reminderMinuteOfDay = settings.reminderTime.toSecondOfDay() / SECONDS_PER_MINUTE.toInt(),
+            ),
+        )
+
+    private companion object {
+        const val SECONDS_PER_MINUTE = 60L
+    }
 }

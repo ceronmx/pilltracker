@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
@@ -41,12 +42,14 @@ import java.time.format.FormatStyle
 import java.time.format.TextStyle
 import java.time.temporal.WeekFields
 
-enum class DayStatus { TAKEN, NOT_TAKEN, UPCOMING }
+/** BREAK = a 21+7 pill-free day; never shown as "not taken" (AC4.1). */
+enum class DayStatus { TAKEN, NOT_TAKEN, UPCOMING, BREAK }
 
 data class DayCell(
     val date: LocalDate,
     val status: DayStatus,
     val isToday: Boolean,
+    val isPlacebo: Boolean = false,
 )
 
 /** Month header with prev/next plus a 7-column grid; null cells are days outside the month. */
@@ -104,17 +107,20 @@ private fun Day(cell: DayCell) {
         DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG)
             .withLocale(LocalConfiguration.current.locales[0])
             .format(cell.date)
+            .let { if (cell.isPlacebo) stringResource(R.string.day_placebo, it) else it }
     val description =
         when (cell.status) {
             DayStatus.TAKEN -> stringResource(R.string.day_taken, dateLabel)
             DayStatus.NOT_TAKEN -> stringResource(R.string.day_not_taken, dateLabel)
             DayStatus.UPCOMING -> dateLabel
+            DayStatus.BREAK -> stringResource(R.string.day_break, dateLabel)
         }
     val (background, content) =
         when (cell.status) {
             DayStatus.TAKEN -> colors.primary to colors.onPrimary
             DayStatus.NOT_TAKEN -> colors.surfaceVariant to colors.onSurfaceVariant
             DayStatus.UPCOMING -> Color.Transparent to colors.onSurface
+            DayStatus.BREAK -> Color.Transparent to colors.outline
         }
     Box(
         Modifier
@@ -127,6 +133,13 @@ private fun Day(cell: DayCell) {
         contentAlignment = Alignment.Center,
     ) {
         Text(cell.date.dayOfMonth.toString(), color = content, style = MaterialTheme.typography.bodyMedium)
+        // Placebo marker: a small dot under the number.
+        if (cell.isPlacebo) {
+            Box(
+                Modifier.align(Alignment.BottomCenter).padding(bottom = 4.dp).size(4.dp).clip(CircleShape)
+                    .background(content),
+            )
+        }
     }
 }
 

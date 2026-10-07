@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "80b9df5366f048a4f14e54b2e97c6c35",
+    "identityHash": "55bd560dcef3015bac19052ffcab90cd",
     "entities": [
       {
         "tableName": "intake",
@@ -29,12 +29,50 @@
         },
         "indices": [],
         "foreignKeys": []
+      },
+      {
+        "tableName": "settings",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `packType` TEXT NOT NULL, `packStartEpochDay` INTEGER NOT NULL, `reminderMinuteOfDay` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "packType",
+            "columnName": "packType",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "packStartEpochDay",
+            "columnName": "packStartEpochDay",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "reminderMinuteOfDay",
+            "columnName": "reminderMinuteOfDay",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
       }
     ],
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '80b9df5366f048a4f14e54b2e97c6c35')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '55bd560dcef3015bac19052ffcab90cd')"
     ]
   }
 }

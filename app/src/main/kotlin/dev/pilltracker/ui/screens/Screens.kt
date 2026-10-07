@@ -20,8 +20,11 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import dev.pilltracker.R
+import dev.pilltracker.domain.rules.DayKind
 import dev.pilltracker.ui.components.MonthGrid
+import dev.pilltracker.ui.components.PackTypeSelector
 import dev.pilltracker.ui.components.PermissionNotice
+import dev.pilltracker.ui.components.PillNumberStepper
 import dev.pilltracker.ui.components.ReminderTimePickerDialog
 import dev.pilltracker.ui.components.TakenButton
 import dev.pilltracker.ui.components.TimeSelector
@@ -58,6 +61,8 @@ fun SetupScreen(
     onContinueWithout: () -> Unit,
 ) {
     ScreenFrame(stringResource(R.string.setup_title)) {
+        PackTypeSelector(state.packType, { onEvent(SetupUiEvent.PackTypeChosen(it)) })
+        PillNumberStepper(state.pillNumber, state.maxPillNumber, { onEvent(SetupUiEvent.PillNumberChanged(it)) })
         TimeSelector(state.time, { onEvent(SetupUiEvent.TimeClicked) })
         if (state.permissionDenied) PermissionNotice(onEnable)
         Spacer(Modifier.weight(1f))
@@ -91,7 +96,22 @@ fun HomeScreen(
     val dateLabel = DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL).withLocale(locale).format(state.today)
     ScreenFrame(dateLabel.replaceFirstChar { it.titlecase(locale) }) {
         Spacer(Modifier.weight(1f))
-        TakenButton(state.taken, { onEvent(HomeUiEvent.Taken) })
+        if (state.dayKind == DayKind.PLACEBO) {
+            Text(
+                stringResource(R.string.placebo_day),
+                Modifier.align(Alignment.CenterHorizontally),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        if (state.dayKind == DayKind.BREAK) {
+            Text(
+                stringResource(R.string.break_day),
+                Modifier.align(Alignment.CenterHorizontally),
+                style = MaterialTheme.typography.headlineSmall,
+            )
+        } else {
+            TakenButton(state.taken, { onEvent(HomeUiEvent.Taken) })
+        }
         Spacer(Modifier.weight(1f))
         TextButton(onHistory, Modifier.align(Alignment.CenterHorizontally)) { Text(stringResource(R.string.history)) }
     }
@@ -129,6 +149,18 @@ private fun HomeUntakenPreview() = PillTrackerTheme { HomeScreen(HomeUiState(Sam
 @PillPreviews
 @Composable
 private fun HomeTakenPreview() = PillTrackerTheme { HomeScreen(HomeUiState(Sample.today, taken = true), {}, {}) }
+
+@PillPreviews
+@Composable
+private fun HomePlaceboPreview() =
+    PillTrackerTheme { HomeScreen(HomeUiState(Sample.today, dayKind = DayKind.PLACEBO), {}, {}) }
+
+@PillPreviews
+@Composable
+private fun HomeBreakPreview() =
+    PillTrackerTheme {
+        HomeScreen(HomeUiState(Sample.today, dayKind = DayKind.BREAK), {}, {})
+    }
 
 @PillPreviews
 @Composable

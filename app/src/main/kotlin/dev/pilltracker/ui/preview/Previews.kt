@@ -23,6 +23,8 @@ object Sample {
     val today: LocalDate = LocalDate.of(2026, 10, 6)
     val month: YearMonth = YearMonth.from(today)
     private val missed = setOf(2, 4)
+    private val breakDays = 22..28
+    private val placeboDays = 29..31
 
     fun weeks(firstDayOfWeek: DayOfWeek): List<List<DayCell?>> =
         monthLayout(month, firstDayOfWeek).map { week ->
@@ -30,11 +32,12 @@ object Sample {
                 date?.let {
                     val status =
                         when {
+                            it.dayOfMonth in breakDays -> DayStatus.BREAK
                             it > today -> DayStatus.UPCOMING
                             it.dayOfMonth in missed -> DayStatus.NOT_TAKEN
                             else -> DayStatus.TAKEN
                         }
-                    DayCell(it, status, isToday = it == today)
+                    DayCell(it, status, isToday = it == today, isPlacebo = it.dayOfMonth in placeboDays)
                 }
             }
         }

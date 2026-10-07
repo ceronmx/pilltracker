@@ -5,10 +5,14 @@ naming:
 style:
   MagicNumber:
     excludes: ['**/ui/theme/**', '**/ui/preview/**', '**/test/**']
+    ignoreAnnotated: ['Preview', 'PillPreviews']
   # @Preview functions are private and only called by tooling.
   UnusedPrivateMember:
     ignoreAnnotated: ['Preview', 'PillPreviews']
 complexity:
+  # Previews are tooling-only; they shouldn't push a file over the function budget.
+  TooManyFunctions:
+    ignoreAnnotatedFunctions: ['Preview', 'PillPreviews']
   # Hoisted state + callbacks make long composable signatures by design.
   LongParameterList:
     ignoreAnnotated: ['Composable']
