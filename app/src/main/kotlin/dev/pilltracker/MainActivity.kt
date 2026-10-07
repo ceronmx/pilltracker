@@ -8,6 +8,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -15,6 +17,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import dev.pilltracker.ui.screens.HistoryScreen
 import dev.pilltracker.ui.screens.HistoryViewModel
 import dev.pilltracker.ui.screens.HomeScreen
+import dev.pilltracker.ui.screens.HomeUiEvent
 import dev.pilltracker.ui.screens.HomeViewModel
 import dev.pilltracker.ui.screens.SetupScreen
 import dev.pilltracker.ui.screens.SetupViewModel
@@ -46,6 +49,7 @@ private fun PillTrackerNavHost() {
         composable(Route.Home.name) {
             val vm: HomeViewModel = hiltViewModel()
             val state by vm.state.collectAsState()
+            LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { vm.onEvent(HomeUiEvent.Resumed) }
             HomeScreen(state, vm::onEvent, onHistory = { nav.navigate(Route.History.name) })
         }
         composable(Route.History.name) {

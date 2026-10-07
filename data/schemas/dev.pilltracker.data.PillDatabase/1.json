@@ -1,0 +1,40 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "80b9df5366f048a4f14e54b2e97c6c35",
+    "entities": [
+      {
+        "tableName": "intake",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`pillDayEpochDay` INTEGER NOT NULL, `takenAtMillis` INTEGER NOT NULL, PRIMARY KEY(`pillDayEpochDay`))",
+        "fields": [
+          {
+            "fieldPath": "pillDayEpochDay",
+            "columnName": "pillDayEpochDay",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "takenAtMillis",
+            "columnName": "takenAtMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "pillDayEpochDay"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
+      }
+    ],
+    "views": [],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '80b9df5366f048a4f14e54b2e97c6c35')"
+    ]
+  }
+}

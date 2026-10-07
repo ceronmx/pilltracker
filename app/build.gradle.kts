@@ -35,6 +35,7 @@ android {
 
 dependencies {
     implementation(project(":domain"))
+    implementation(project(":data"))
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.material3)
     implementation(libs.activity.compose)
@@ -46,6 +47,7 @@ dependencies {
     ksp(libs.hilt.compiler)
 
     testImplementation(libs.junit5)
+    testImplementation(libs.coroutines.test)
 
     androidTestImplementation(platform(libs.compose.bom))
     androidTestImplementation(libs.compose.ui.test.junit4)

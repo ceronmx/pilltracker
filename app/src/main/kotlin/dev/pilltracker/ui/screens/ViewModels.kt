@@ -1,14 +1,22 @@
 package dev.pilltracker.ui.screens
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dev.pilltracker.domain.IntakeRepository
 import dev.pilltracker.domain.rules.monthLayout
 import dev.pilltracker.ui.components.DayCell
 import dev.pilltracker.ui.components.DayStatus
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import java.time.Clock
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -16,7 +24,7 @@ import java.time.LocalTime
 import java.time.YearMonth
 import javax.inject.Inject
 
-// ponytail: all state is in memory until the storage, permission and alarm beads land.
+// ponytail: setup answers are in memory until the setup-questions bead persists them.
 
 /** Preset reminder time (AC1.1). */
 private val DEFAULT_REMINDER_TIME: LocalTime = LocalTime.parse("09:00")
@@ -59,22 +67,33 @@ data class HomeUiState(
 
 sealed interface HomeUiEvent {
     data object Taken : HomeUiEvent
+
+    /** App came to the foreground: re-read "today" (midnight passed, or the zone changed). */
+    data object Resumed : HomeUiEvent
 }
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class HomeViewModel
     @Inject
-    constructor(clock: Clock) : ViewModel() {
-        // ponytail: "today" is read once; refresh at midnight when the repository bead adds observation.
-        private val _state = MutableStateFlow(HomeUiState(LocalDate.now(clock)))
-        val state: StateFlow<HomeUiState> = _state.asStateFlow()
+    constructor(
+        private val clock: Clock,
+        private val intakes: IntakeRepository,
+    ) : ViewModel() {
+        private val today = MutableStateFlow(LocalDate.now(clock))
 
-        fun onEvent(event: HomeUiEvent) =
-            _state.update {
-                when (event) {
-                    HomeUiEvent.Taken -> it.copy(taken = true)
-                }
+        val state: StateFlow<HomeUiState> =
+            today
+                .flatMapLatest { day -> intakes.takenDays(day, day).map { HomeUiState(day, day in it) } }
+                .stateIn(viewModelScope, SharingStarted.Eagerly, HomeUiState(today.value))
+
+        fun onEvent(event: HomeUiEvent) {
+            // Both events re-read the clock, so a tap after midnight logs the new pill day.
+            today.value = LocalDate.now(clock)
+            if (event == HomeUiEvent.Taken) {
+                viewModelScope.launch { intakes.markTaken(today.value, clock.instant()) }
             }
+        }
     }
 
 data class HistoryUiState(
@@ -89,37 +108,50 @@ sealed interface HistoryUiEvent {
     data object Next : HistoryUiEvent
 }
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class HistoryViewModel
     @Inject
     constructor(
         clock: Clock,
         private val firstDayOfWeek: DayOfWeek,
+        intakes: IntakeRepository,
     ) : ViewModel() {
         private val today = LocalDate.now(clock)
-        private val _state = MutableStateFlow(stateFor(YearMonth.from(today)))
-        val state: StateFlow<HistoryUiState> = _state.asStateFlow()
+        private val month = MutableStateFlow(YearMonth.from(today))
+
+        val state: StateFlow<HistoryUiState> =
+            month
+                .flatMapLatest { m -> intakes.takenDays(m.atDay(1), m.atEndOfMonth()).map { stateFor(m, it) } }
+                .stateIn(viewModelScope, SharingStarted.Eagerly, stateFor(month.value, emptySet()))
 
         fun onEvent(event: HistoryUiEvent) =
-            _state.update {
+            month.update {
                 when (event) {
-                    HistoryUiEvent.Previous -> stateFor(it.month.minusMonths(1))
-                    HistoryUiEvent.Next -> stateFor(it.month.plusMonths(1))
+                    HistoryUiEvent.Previous -> it.minusMonths(1)
+                    HistoryUiEvent.Next -> it.plusMonths(1)
                 }
             }
 
-        private fun stateFor(month: YearMonth) =
-            HistoryUiState(
-                month = month,
-                firstDayOfWeek = firstDayOfWeek,
-                weeks =
-                    monthLayout(month, firstDayOfWeek).map { week ->
-                        week.map { date ->
-                            date?.let {
-                                val status = if (it > today) DayStatus.UPCOMING else DayStatus.NOT_TAKEN
-                                DayCell(it, status, isToday = it == today)
-                            }
+        private fun stateFor(
+            month: YearMonth,
+            taken: Set<LocalDate>,
+        ) = HistoryUiState(
+            month = month,
+            firstDayOfWeek = firstDayOfWeek,
+            weeks =
+                monthLayout(month, firstDayOfWeek).map { week ->
+                    week.map { date ->
+                        date?.let {
+                            val status =
+                                when {
+                                    it > today -> DayStatus.UPCOMING
+                                    it in taken -> DayStatus.TAKEN
+                                    else -> DayStatus.NOT_TAKEN
+                                }
+                            DayCell(it, status, isToday = it == today)
                         }
-                    },
-            )
+                    }
+                },
+        )
     }

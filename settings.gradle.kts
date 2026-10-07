@@ -12,4 +12,4 @@ dependencyResolutionManagement {
     }
 }
 rootProject.name = "pilltracker"
-include(":app", ":domain")
+include(":app", ":domain", ":data")
