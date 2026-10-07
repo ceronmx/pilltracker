@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.ZeroCornerSize
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
@@ -151,9 +150,7 @@ fun SettingsSheet(
     onClose: () -> Unit,
 ) {
     val settings = state.settings ?: return
-    // Theme extraLarge is 50% (pill buttons), the sheet's default; use the 28dp card radius on top instead.
-    val shape = MaterialTheme.shapes.large.copy(bottomStart = ZeroCornerSize, bottomEnd = ZeroCornerSize)
-    ModalBottomSheet(onClose, shape = shape) {
+    ModalBottomSheet(onClose) {
         Column(
             Modifier.padding(horizontal = 24.dp).padding(bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),

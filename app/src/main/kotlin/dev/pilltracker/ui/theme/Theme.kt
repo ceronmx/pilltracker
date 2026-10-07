@@ -35,13 +35,12 @@ private val DarkColors =
         onSurface = Color(0xFFFFFFFF),
     )
 
-// Large radii: cards 20dp, buttons fully pill-shaped.
+// Large radii: cards 20dp. Buttons are pill-shaped by M3 default; extraLarge (dialogs, sheets) stays at M3's 28dp.
 private val IosShapes =
     Shapes(
         small = RoundedCornerShape(12.dp),
         medium = RoundedCornerShape(20.dp),
         large = RoundedCornerShape(28.dp),
-        extraLarge = RoundedCornerShape(50),
     )
 
 @Composable
