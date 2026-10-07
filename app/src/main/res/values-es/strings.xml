@@ -2,4 +2,25 @@
     <string name="app_name">PillTracker</string>
     <string name="notification_channel_name">Recordatorio diario</string>
     <string name="notification_title">Es hora de tu registro diario</string>
+
+    <!-- Setup -->
+    <string name="setup_title">Configura tu recordatorio diario</string>
+    <string name="reminder_time_label">Hora del recordatorio</string>
+    <string name="enable_reminders">Activar recordatorios</string>
+    <string name="continue_without_reminders">Continuar sin recordatorios</string>
+    <string name="permission_denied">Los recordatorios están desactivados porque las notificaciones no están permitidas. Puedes seguir registrando manualmente.</string>
+    <string name="retry">Reintentar</string>
+    <string name="time_picker_confirm">Aceptar</string>
+    <string name="time_picker_cancel">Cancelar</string>
+
+    <!-- Home -->
+    <string name="taken">Tomada</string>
+    <string name="taken_today">Registrado hoy</string>
+    <string name="history">Historial</string>
+
+    <!-- History -->
+    <string name="previous_month">Mes anterior</string>
+    <string name="next_month">Mes siguiente</string>
+    <string name="day_taken">%1$s, tomada</string>
+    <string name="day_not_taken">%1$s, no tomada</string>
 </resources>

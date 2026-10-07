@@ -3,4 +3,25 @@
     <!-- Notification wording stays neutral: it may be seen by others (CLAUDE.md hard constraint 4). -->
     <string name="notification_channel_name">Daily reminder</string>
     <string name="notification_title">Time for your daily check-in</string>
+
+    <!-- Setup -->
+    <string name="setup_title">Set your daily reminder</string>
+    <string name="reminder_time_label">Reminder time</string>
+    <string name="enable_reminders">Enable reminders</string>
+    <string name="continue_without_reminders">Continue without reminders</string>
+    <string name="permission_denied">Reminders are off because notifications aren\'t allowed. You can still log manually.</string>
+    <string name="retry">Try again</string>
+    <string name="time_picker_confirm">OK</string>
+    <string name="time_picker_cancel">Cancel</string>
+
+    <!-- Home -->
+    <string name="taken">Taken</string>
+    <string name="taken_today">Logged for today</string>
+    <string name="history">History</string>
+
+    <!-- History -->
+    <string name="previous_month">Previous month</string>
+    <string name="next_month">Next month</string>
+    <string name="day_taken">%1$s, taken</string>
+    <string name="day_not_taken">%1$s, not taken</string>
 </resources>

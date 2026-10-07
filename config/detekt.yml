@@ -4,4 +4,11 @@ naming:
     ignoreAnnotated: ['Composable']
 style:
   MagicNumber:
-    excludes: ['**/ui/theme/**', '**/test/**']
+    excludes: ['**/ui/theme/**', '**/ui/preview/**', '**/test/**']
+  # @Preview functions are private and only called by tooling.
+  UnusedPrivateMember:
+    ignoreAnnotated: ['Preview', 'PillPreviews']
+complexity:
+  # Hoisted state + callbacks make long composable signatures by design.
+  LongParameterList:
+    ignoreAnnotated: ['Composable']
