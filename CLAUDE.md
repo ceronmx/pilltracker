@@ -35,7 +35,7 @@ ui (Compose, ViewModels) -> domain (use cases, models, rules) <- data (Room, rep
 
 - `domain` is **pure Kotlin**: no `android.*`, no Room, no Compose imports. Enforced by a Gradle module boundary (`:domain` is a JVM module).
 - `data` implements repository interfaces declared in `domain`.
-- `platform` implements `ReminderScheduler`, `Clock`, `Notifier` interfaces declared in `domain`.
+- `platform` implements `ReminderScheduler`, `Notifier` interfaces declared in `domain`, and provides the `java.time.Clock` (`DeviceClock`, ADR 0002).
 - ViewModels expose a single immutable `UiState` via `StateFlow` and accept `UiEvent`s (unidirectional data flow). No logic in composables.
 - Dependency injection: Hilt. Constructor injection only.
 
@@ -48,7 +48,7 @@ ui (Compose, ViewModels) -> domain (use cases, models, rules) <- data (Room, rep
 - Domain: plain JUnit5 tests, written **before** the implementation. Target 100% branch coverage on `domain/rules`.
 - Data: Room in-memory DB tests plus migration tests (`MigrationTestHelper`) for every schema bump.
 - UI: a few Compose UI tests for the three screens. No UI test for logic that belongs in the domain.
-- Use fakes (`FakeClock`, `FakeReminderScheduler`, `InMemoryIntakeRepository`), not mocking frameworks, for our own interfaces.
+- Use fakes (`Clock.fixed`, `FakeReminderScheduler`, `InMemoryIntakeRepository`), not mocking frameworks, for our own interfaces.
 - A task is not done until `./gradlew check` passes.
 
 ## Code style

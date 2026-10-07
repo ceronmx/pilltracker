@@ -20,7 +20,6 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import dev.pilltracker.R
-import dev.pilltracker.ui.components.DayCell
 import dev.pilltracker.ui.components.MonthGrid
 import dev.pilltracker.ui.components.PermissionNotice
 import dev.pilltracker.ui.components.ReminderTimePickerDialog
@@ -29,10 +28,6 @@ import dev.pilltracker.ui.components.TimeSelector
 import dev.pilltracker.ui.preview.PillPreviews
 import dev.pilltracker.ui.preview.Sample
 import dev.pilltracker.ui.theme.PillTrackerTheme
-import java.time.DayOfWeek
-import java.time.LocalDate
-import java.time.LocalTime
-import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.time.temporal.WeekFields
@@ -57,20 +52,16 @@ private fun ScreenFrame(
 /** First launch: preset time, picker, one Enable action (AC1.1-1.3). */
 @Composable
 fun SetupScreen(
-    time: LocalTime,
-    showTimePicker: Boolean,
-    permissionDenied: Boolean,
-    onTimeClick: () -> Unit,
-    onTimePicked: (LocalTime) -> Unit,
-    onTimePickerDismiss: () -> Unit,
+    state: SetupUiState,
+    onEvent: (SetupUiEvent) -> Unit,
     onEnable: () -> Unit,
     onContinueWithout: () -> Unit,
 ) {
     ScreenFrame(stringResource(R.string.setup_title)) {
-        TimeSelector(time, onTimeClick)
-        if (permissionDenied) PermissionNotice(onEnable)
+        TimeSelector(state.time, { onEvent(SetupUiEvent.TimeClicked) })
+        if (state.permissionDenied) PermissionNotice(onEnable)
         Spacer(Modifier.weight(1f))
-        if (permissionDenied) {
+        if (state.permissionDenied) {
             TextButton(onContinueWithout, Modifier.align(Alignment.CenterHorizontally)) {
                 Text(stringResource(R.string.continue_without_reminders))
             }
@@ -80,22 +71,27 @@ fun SetupScreen(
             }
         }
     }
-    if (showTimePicker) ReminderTimePickerDialog(time, onTimePicked, onTimePickerDismiss)
+    if (state.showTimePicker) {
+        ReminderTimePickerDialog(
+            state.time,
+            { onEvent(SetupUiEvent.TimePicked(it)) },
+            { onEvent(SetupUiEvent.PickerDismissed) },
+        )
+    }
 }
 
 /** Today + one-tap Taken (AC3.1). */
 @Composable
 fun HomeScreen(
-    today: LocalDate,
-    taken: Boolean,
-    onTaken: () -> Unit,
+    state: HomeUiState,
+    onEvent: (HomeUiEvent) -> Unit,
     onHistory: () -> Unit,
 ) {
     val locale = LocalConfiguration.current.locales[0]
-    val dateLabel = DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL).withLocale(locale).format(today)
+    val dateLabel = DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL).withLocale(locale).format(state.today)
     ScreenFrame(dateLabel.replaceFirstChar { it.titlecase(locale) }) {
         Spacer(Modifier.weight(1f))
-        TakenButton(taken, onTaken)
+        TakenButton(state.taken, { onEvent(HomeUiEvent.Taken) })
         Spacer(Modifier.weight(1f))
         TextButton(onHistory, Modifier.align(Alignment.CenterHorizontally)) { Text(stringResource(R.string.history)) }
     }
@@ -104,37 +100,40 @@ fun HomeScreen(
 /** Month grid of taken / not-taken days (AC4.1). Records only, no advice (AC4.2). */
 @Composable
 fun HistoryScreen(
-    month: YearMonth,
-    firstDayOfWeek: DayOfWeek,
-    weeks: List<List<DayCell?>>,
-    onPrevious: () -> Unit,
-    onNext: () -> Unit,
+    state: HistoryUiState,
+    onEvent: (HistoryUiEvent) -> Unit,
 ) {
     ScreenFrame(stringResource(R.string.history)) {
-        MonthGrid(month, firstDayOfWeek, weeks, onPrevious, onNext)
+        MonthGrid(
+            state.month,
+            state.firstDayOfWeek,
+            state.weeks,
+            { onEvent(HistoryUiEvent.Previous) },
+            { onEvent(HistoryUiEvent.Next) },
+        )
     }
 }
 
 @PillPreviews
 @Composable
-private fun SetupPreview() = PillTrackerTheme { SetupScreen(Sample.time, false, false, {}, {}, {}, {}, {}) }
+private fun SetupPreview() = PillTrackerTheme { SetupScreen(SetupUiState(), {}, {}, {}) }
 
 @PillPreviews
 @Composable
-private fun SetupDeniedPreview() = PillTrackerTheme { SetupScreen(Sample.time, false, true, {}, {}, {}, {}, {}) }
+private fun SetupDeniedPreview() = PillTrackerTheme { SetupScreen(SetupUiState(permissionDenied = true), {}, {}, {}) }
 
 @PillPreviews
 @Composable
-private fun HomeUntakenPreview() = PillTrackerTheme { HomeScreen(Sample.today, taken = false, {}, {}) }
+private fun HomeUntakenPreview() = PillTrackerTheme { HomeScreen(HomeUiState(Sample.today), {}, {}) }
 
 @PillPreviews
 @Composable
-private fun HomeTakenPreview() = PillTrackerTheme { HomeScreen(Sample.today, taken = true, {}, {}) }
+private fun HomeTakenPreview() = PillTrackerTheme { HomeScreen(HomeUiState(Sample.today, taken = true), {}, {}) }
 
 @PillPreviews
 @Composable
 private fun HistoryPreview() =
     PillTrackerTheme {
         val first = WeekFields.of(LocalConfiguration.current.locales[0]).firstDayOfWeek
-        HistoryScreen(Sample.month, first, Sample.weeks(first), {}, {})
+        HistoryScreen(HistoryUiState(Sample.month, first, Sample.weeks(first)), {})
     }

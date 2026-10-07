@@ -16,8 +16,9 @@ jobs:
 
       - name: No direct time access outside platform
         run: |
-          if grep -rEn "System\.currentTimeMillis|Instant\.now\(|LocalDate\.now\(|LocalDateTime\.now\(|ZoneId\.systemDefault" \
-              --include=*.kt domain data app 2>/dev/null; then
+          # No-arg now() only: now(clock) is the injected form. DeviceClock is the one allowed reader.
+          if grep -rEn "System\.currentTimeMillis|(Instant|LocalDate|LocalDateTime)\.now\(\)|ZoneId\.systemDefault" \
+              --include=*.kt --exclude=DeviceClock.kt domain data app 2>/dev/null; then
             echo "FAIL: use the injected Clock instead (see ADR 0002)"; exit 1
           fi
 

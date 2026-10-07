@@ -5,8 +5,11 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import dev.pilltracker.ui.preview.Sample
 import dev.pilltracker.ui.screens.HistoryScreen
+import dev.pilltracker.ui.screens.HistoryUiState
 import dev.pilltracker.ui.screens.HomeScreen
+import dev.pilltracker.ui.screens.HomeUiState
 import dev.pilltracker.ui.screens.SetupScreen
+import dev.pilltracker.ui.screens.SetupUiState
 import dev.pilltracker.ui.theme.PillTrackerTheme
 import org.junit.Rule
 import org.junit.Test
@@ -20,17 +23,17 @@ class ScreensTest {
         lang: String,
         denied: Boolean = false,
     ) = rule.setContentIn(lang) {
-        PillTrackerTheme { SetupScreen(Sample.time, false, denied, {}, {}, {}, {}, {}) }
+        PillTrackerTheme { SetupScreen(SetupUiState(permissionDenied = denied), {}, {}, {}) }
     }
 
     private fun home(
         lang: String,
         taken: Boolean,
-    ) = rule.setContentIn(lang) { PillTrackerTheme { HomeScreen(Sample.today, taken, {}, {}) } }
+    ) = rule.setContentIn(lang) { PillTrackerTheme { HomeScreen(HomeUiState(Sample.today, taken), {}, {}) } }
 
     private fun history(lang: String) =
         rule.setContentIn(lang) {
-            PillTrackerTheme { HistoryScreen(Sample.month, MONDAY, Sample.weeks(MONDAY), {}, {}) }
+            PillTrackerTheme { HistoryScreen(HistoryUiState(Sample.month, MONDAY, Sample.weeks(MONDAY)), {}) }
         }
 
     @Test fun setupEn() {

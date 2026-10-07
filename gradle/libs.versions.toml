@@ -6,6 +6,8 @@ composeBom = "2024.09.03"
 activityCompose = "1.9.2"
 junit5 = "5.11.2"
 androidxTestRunner = "1.6.2"
+navigationCompose = "2.8.9"
+hiltNavigationCompose = "1.2.0"
 hilt = "2.51.1"
 ksp = "1.9.25-1.0.20"
 ktlint = "12.1.2"
@@ -18,6 +20,8 @@ activity-compose = { module = "androidx.activity:activity-compose", version.ref 
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
 hilt-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hilt" }
 junit5 = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit5" }
+navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
+hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
 compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
 compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
 compose-ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4" }
