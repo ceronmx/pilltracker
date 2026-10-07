@@ -17,6 +17,27 @@ android {
         versionName = "0.1"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
+    // Release key stays out of git: set these in ~/.gradle/gradle.properties (see README).
+    // Without them assembleRelease still builds, unsigned.
+    val storeFile = providers.gradleProperty("pilltracker.storeFile").orNull
+    signingConfigs {
+        if (storeFile != null) {
+            create("release") {
+                this.storeFile = file(storeFile)
+                storePassword = providers.gradleProperty("pilltracker.storePassword").get()
+                keyAlias = providers.gradleProperty("pilltracker.keyAlias").get()
+                keyPassword = providers.gradleProperty("pilltracker.keyPassword").get()
+            }
+        }
+    }
+    buildTypes {
+        release {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"))
+            signingConfig = signingConfigs.findByName("release")
+        }
+    }
     // Ship only our locales; no localeConfig, so the app follows the system language (AC5.2).
     androidResources { localeFilters += listOf("en", "es") }
     compileOptions {
