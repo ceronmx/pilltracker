@@ -85,6 +85,20 @@ class ScreensTest {
         rule.onNodeWithText("Continue without reminders").assertIsDisplayed()
     }
 
+    /** 21+7 setup during the break week: days 22-28 read as break days (806). */
+    @Test fun setupBreakWeekEs() {
+        val breakWeek = SetupUiState(PackType.TWENTY_ONE_PLUS_SEVEN, pillNumber = 23)
+        rule.setContentIn("es") { PillTrackerTheme { SetupScreen(breakWeek, {}, {}, {}) } }
+        rule.onNodeWithText("Día 23 de 28 · descanso").assertExists()
+    }
+
+    @Test fun setupBreakWeekEn() {
+        rule.setContentIn("en") {
+            PillTrackerTheme { SetupScreen(SetupUiState(PackType.TWENTY_ONE_PLUS_SEVEN, pillNumber = 23), {}, {}, {}) }
+        }
+        rule.onNodeWithText("Day 23 of 28 · break").assertExists()
+    }
+
     @Test fun homeBreakDayEn() {
         rule.setContentIn("en") {
             PillTrackerTheme { HomeScreen(sampleHome.copy(dayKind = DayKind.BREAK), {}, {}) }

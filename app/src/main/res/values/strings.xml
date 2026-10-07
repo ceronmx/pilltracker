@@ -12,6 +12,7 @@
     <string name="pack_21_7">21 + 7 break</string>
     <string name="pill_number_label">Which pill is today?</string>
     <string name="pill_number_value">Pill %1$d of %2$d</string>
+    <string name="pill_number_break">Day %1$d of %2$d · break</string>
     <string name="previous_pill">Previous pill</string>
     <string name="next_pill">Next pill</string>
     <string name="enable_reminders">Enable reminders</string>

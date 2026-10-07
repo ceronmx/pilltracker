@@ -127,8 +127,21 @@ class ViewModelsTest {
         vm.onEvent(SetupUiEvent.PillNumberChanged(29))
         assertEquals(28, vm.state.value.pillNumber)
         vm.onEvent(SetupUiEvent.PackTypeChosen(PackType.TWENTY_ONE_PLUS_SEVEN))
-        assertEquals(21, vm.state.value.pillNumber)
-        assertEquals(21, vm.state.value.maxPillNumber)
+        assertEquals(28, vm.state.value.pillNumber) // 21+7 also counts 1-28: 22-28 is the break week
+    }
+
+    @Test
+    fun setupDuringTheBreakWeekShowsABreakDayAndSavesThePackStart() {
+        val vm = SetupViewModel(clockAt(oct6, LocalTime.NOON), settings, scheduler)
+        vm.onEvent(SetupUiEvent.PillNumberChanged(23))
+        assertEquals(DayKind.PLACEBO, vm.state.value.dayKind) // 28 pack: day 23 is a placebo pill
+        vm.onEvent(SetupUiEvent.PackTypeChosen(PackType.TWENTY_ONE_PLUS_SEVEN))
+        assertEquals(DayKind.BREAK, vm.state.value.dayKind)
+        vm.onEvent(SetupUiEvent.PillNumberChanged(21))
+        assertEquals(DayKind.ACTIVE, vm.state.value.dayKind)
+        vm.onEvent(SetupUiEvent.PillNumberChanged(23))
+        vm.onEvent(SetupUiEvent.Save)
+        assertEquals(oct6.minusDays(22), settings.settings.value?.packStart)
     }
 
     @Test

@@ -82,7 +82,11 @@ fun SetupScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             PackTypeSelector(state.packType, { onEvent(SetupUiEvent.PackTypeChosen(it)) })
-            PillNumberStepper(state.pillNumber, state.maxPillNumber, { onEvent(SetupUiEvent.PillNumberChanged(it)) })
+            PillNumberStepper(
+                state.pillNumber,
+                state.dayKind == DayKind.BREAK,
+                { onEvent(SetupUiEvent.PillNumberChanged(it)) },
+            )
             TimeSelector(state.time, { onEvent(SetupUiEvent.TimeClicked) })
             if (state.permissionDenied) PermissionNotice(onEnable)
         }

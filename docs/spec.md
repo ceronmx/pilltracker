@@ -3,7 +3,7 @@
 A 100% local Android app: remind one person to take a daily pill, log it in one tap, show a month history. No accounts, network, analytics or medical advice. Rules for implementers: [CLAUDE.md](../CLAUDE.md).
 
 ## 1. Setup (minimal taps)
-- AC1.1 First launch shows **one screen** with: pack type (**28**, preselected: 21 active + 7 placebo pills; or **21+7**: 21 active pills, then 7 days without pills), which pill of the pack is today (1-28 or 1-21, default 1 = starting a new pack today), a preset reminder time (default 09:00) with a time picker, and one **Enable reminders** button. With the defaults, setup is one tap.
+- AC1.1 First launch shows **one screen** with: pack type (**28**, preselected: 21 active + 7 placebo pills; or **21+7**: 21 active pills, then 7 days without pills), which day of the pack is today (1-28 for both; for 21+7, days 22-28 are labeled as break days, so setup works during the break week; default 1 = starting a new pack today), a preset reminder time (default 09:00) with a time picker, and one **Enable reminders** button. With the defaults, setup is one tap.
 - AC1.2 That button also requests notification permission (API 33+) when needed; nothing else (no exact-alarm access, see ADR 0004). No tutorial, wizard, or account step.
 - AC1.3 If notifications are denied, the screen says so neutrally and offers a retry (opens the app's notification settings; setup continues on its own once allowed) and "Continue without reminders"; the app stays usable for manual logging.
 - AC1.4 Answers are saved; later launches open Home. The pack repeats every 28 days from the day of pill 1.

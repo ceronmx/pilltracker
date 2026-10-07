@@ -3,7 +3,8 @@ package dev.pilltracker.domain.rules
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit.DAYS
 
-private const val CYCLE_DAYS = 28
+/** Days in a pack cycle, for both pack types. */
+const val PACK_DAYS = 28
 private const val ACTIVE_DAYS = 21
 
 /** 28 = 21 active + 7 placebo pills; 21+7 = 21 active pills + 7 days without pills. */
@@ -23,7 +24,7 @@ fun dayKind(
     start: LocalDate,
     date: LocalDate,
 ): DayKind {
-    val dayInCycle = Math.floorMod(DAYS.between(start, date), CYCLE_DAYS.toLong())
+    val dayInCycle = Math.floorMod(DAYS.between(start, date), PACK_DAYS.toLong())
     return when {
         dayInCycle < ACTIVE_DAYS -> DayKind.ACTIVE
         type == PackType.TWENTY_EIGHT -> DayKind.PLACEBO

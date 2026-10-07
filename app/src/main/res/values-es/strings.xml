@@ -11,6 +11,7 @@
     <string name="pack_21_7">21 + 7 descanso</string>
     <string name="pill_number_label">¿Qué pastilla toca hoy?</string>
     <string name="pill_number_value">Pastilla %1$d de %2$d</string>
+    <string name="pill_number_break">Día %1$d de %2$d · descanso</string>
     <string name="previous_pill">Pastilla anterior</string>
     <string name="next_pill">Pastilla siguiente</string>
     <string name="enable_reminders">Activar recordatorios</string>

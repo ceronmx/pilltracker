@@ -35,6 +35,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import dev.pilltracker.R
+import dev.pilltracker.domain.rules.PACK_DAYS
 import dev.pilltracker.domain.rules.PackType
 import dev.pilltracker.ui.format.rememberTimeFormatter
 import dev.pilltracker.ui.preview.PillPreviews
@@ -149,7 +150,7 @@ fun PackTypeSelector(
 @Composable
 fun PillNumberStepper(
     number: Int,
-    max: Int,
+    breakDay: Boolean,
     onChange: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -161,13 +162,17 @@ fun PillNumberStepper(
                     Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, stringResource(R.string.previous_pill))
                 }
                 Text(
-                    stringResource(R.string.pill_number_value, number, max),
+                    stringResource(
+                        if (breakDay) R.string.pill_number_break else R.string.pill_number_value,
+                        number,
+                        PACK_DAYS,
+                    ),
                     Modifier.weight(1f),
                     style = MaterialTheme.typography.headlineSmall,
                     color = MaterialTheme.colorScheme.primary,
                     textAlign = TextAlign.Center,
                 )
-                IconButton({ onChange(number + 1) }, enabled = number < max) {
+                IconButton({ onChange(number + 1) }, enabled = number < PACK_DAYS) {
                     Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, stringResource(R.string.next_pill))
                 }
             }
@@ -201,4 +206,4 @@ private fun PackTypeSelectorPreview() = PillTrackerTheme { PackTypeSelector(Pack
 
 @PillPreviews
 @Composable
-private fun PillNumberStepperPreview() = PillTrackerTheme { PillNumberStepper(1, 28, {}) }
+private fun PillNumberStepperPreview() = PillTrackerTheme { PillNumberStepper(1, false, {}) }

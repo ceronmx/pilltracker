@@ -8,6 +8,7 @@ import dev.pilltracker.domain.ReminderScheduler
 import dev.pilltracker.domain.Settings
 import dev.pilltracker.domain.SettingsRepository
 import dev.pilltracker.domain.rules.DayKind
+import dev.pilltracker.domain.rules.PACK_DAYS
 import dev.pilltracker.domain.rules.PackType
 import dev.pilltracker.domain.rules.dayKind
 import dev.pilltracker.domain.rules.monthLayout
@@ -31,6 +32,9 @@ import java.time.LocalTime
 import java.time.YearMonth
 import javax.inject.Inject
 
+/** Any fixed day: setup only needs the day kind relative to the pack, not a real date. */
+private val REFERENCE_DAY: LocalDate = LocalDate.ofEpochDay(0)
+
 /** Preset reminder time (AC1.1). */
 private val DEFAULT_REMINDER_TIME: LocalTime = LocalTime.parse("09:00")
 
@@ -47,13 +51,8 @@ data class SetupUiState(
     val showTimePicker: Boolean = false,
     val permissionDenied: Boolean = false,
 ) {
-    /** 28 for a 28 pack, 21 for 21+7 (AC1.1). */
-    val maxPillNumber: Int get() = if (packType == PackType.TWENTY_EIGHT) PILLS_28 else PILLS_21
-
-    private companion object {
-        const val PILLS_28 = 28
-        const val PILLS_21 = 21
-    }
+    /** What the chosen day is, so 21+7 days 22-28 read as break days (AC1.1). */
+    val dayKind: DayKind get() = dayKind(packType, packStart(REFERENCE_DAY, pillNumber), REFERENCE_DAY)
 }
 
 sealed interface SetupUiEvent {
@@ -89,8 +88,8 @@ class SetupViewModel
             if (event == SetupUiEvent.Save) return save()
             _state.update {
                 when (event) {
-                    is SetupUiEvent.PackTypeChosen -> it.copy(packType = event.type).clampPill()
-                    is SetupUiEvent.PillNumberChanged -> it.copy(pillNumber = event.number).clampPill()
+                    is SetupUiEvent.PackTypeChosen -> it.copy(packType = event.type)
+                    is SetupUiEvent.PillNumberChanged -> it.copy(pillNumber = event.number.coerceIn(1, PACK_DAYS))
                     SetupUiEvent.TimeClicked -> it.copy(showTimePicker = true)
                     is SetupUiEvent.TimePicked -> it.copy(time = event.time, showTimePicker = false)
                     SetupUiEvent.PickerDismissed -> it.copy(showTimePicker = false)
@@ -99,8 +98,6 @@ class SetupViewModel
                 }
             }
         }
-
-        private fun SetupUiState.clampPill() = copy(pillNumber = pillNumber.coerceIn(1, maxPillNumber))
 
         private fun save() {
             val s = _state.value
