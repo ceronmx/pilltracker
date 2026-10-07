@@ -1,0 +1,4 @@
+<resources>
+    <!-- Platform theme without the title bar; Compose draws everything (no AppCompat). -->
+    <style name="Theme.PillTracker" parent="android:Theme.Material.Light.NoActionBar" />
+</resources>
