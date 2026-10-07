@@ -24,8 +24,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
 import dev.pilltracker.domain.SettingsRepository
-import dev.pilltracker.ui.screens.HistoryScreen
-import dev.pilltracker.ui.screens.HistoryViewModel
 import dev.pilltracker.ui.screens.HomeScreen
 import dev.pilltracker.ui.screens.HomeUiEvent
 import dev.pilltracker.ui.screens.HomeViewModel
@@ -53,7 +51,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-private enum class Route { Setup, Home, History }
+private enum class Route { Setup, Home }
 
 @Composable
 private fun PillTrackerNavHost(start: Route) {
@@ -67,12 +65,7 @@ private fun PillTrackerNavHost(start: Route) {
             val vm: HomeViewModel = hiltViewModel()
             val state by vm.state.collectAsState()
             LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { vm.onEvent(HomeUiEvent.Resumed) }
-            HomeScreen(state, vm::onEvent, onHistory = { nav.navigate(Route.History.name) })
-        }
-        composable(Route.History.name) {
-            val vm: HistoryViewModel = hiltViewModel()
-            val state by vm.state.collectAsState()
-            HistoryScreen(state, vm::onEvent)
+            HomeScreen(state, vm::onEvent)
         }
     }
 }

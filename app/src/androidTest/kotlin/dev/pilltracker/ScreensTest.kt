@@ -13,8 +13,6 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import dev.pilltracker.domain.rules.DayKind
 import dev.pilltracker.ui.preview.Sample
-import dev.pilltracker.ui.screens.HistoryScreen
-import dev.pilltracker.ui.screens.HistoryUiState
 import dev.pilltracker.ui.screens.HomeScreen
 import dev.pilltracker.ui.screens.HomeUiState
 import dev.pilltracker.ui.screens.SetupScreen
@@ -38,12 +36,9 @@ class ScreensTest {
     private fun home(
         lang: String,
         taken: Boolean,
-    ) = rule.setContentIn(lang) { PillTrackerTheme { HomeScreen(HomeUiState(Sample.today, taken), {}, {}) } }
+    ) = rule.setContentIn(lang) { PillTrackerTheme { HomeScreen(sampleHome.copy(taken = taken), {}) } }
 
-    private fun history(lang: String) =
-        rule.setContentIn(lang) {
-            PillTrackerTheme { HistoryScreen(HistoryUiState(Sample.month, MONDAY, Sample.weeks(MONDAY)), {}) }
-        }
+    private val sampleHome = HomeUiState(Sample.today, month = Sample.month, weeks = Sample.weeks(MONDAY))
 
     @Test fun setupEn() {
         setup("en")
@@ -87,7 +82,7 @@ class ScreensTest {
 
     @Test fun homeBreakDayEn() {
         rule.setContentIn("en") {
-            PillTrackerTheme { HomeScreen(HomeUiState(Sample.today, dayKind = DayKind.BREAK), {}, {}) }
+            PillTrackerTheme { HomeScreen(sampleHome.copy(dayKind = DayKind.BREAK), {}) }
         }
         rule.onNodeWithText("Break day").assertExists()
         rule.onNodeWithText("Taken").assertDoesNotExist()
@@ -95,7 +90,7 @@ class ScreensTest {
 
     @Test fun homePlaceboDayEs() {
         rule.setContentIn("es") {
-            PillTrackerTheme { HomeScreen(HomeUiState(Sample.today, dayKind = DayKind.PLACEBO), {}, {}) }
+            PillTrackerTheme { HomeScreen(sampleHome.copy(dayKind = DayKind.PLACEBO), {}) }
         }
         rule.onNodeWithText("Día de placebo").assertExists()
         rule.onNodeWithText("Tomada").assertExists()
@@ -111,14 +106,17 @@ class ScreensTest {
         rule.onNodeWithText("Registrado hoy").assertExists()
     }
 
-    @Test fun historyEn() {
-        history("en")
+    /** Taken button and month grid on the same screen (u9o). */
+    @Test fun homeShowsTakenAndMonthEn() {
+        home("en", taken = false)
+        rule.onNodeWithText("Taken").assertExists()
         rule.onNodeWithText("October 2026").assertExists()
         rule.onNodeWithContentDescription("October 2, 2026, not taken").assertExists()
     }
 
-    @Test fun historyEs() {
-        history("es")
+    @Test fun homeShowsTakenAndMonthEs() {
+        home("es", taken = true)
+        rule.onNodeWithText("Registrado hoy").assertExists()
         rule.onNodeWithText("Octubre 2026").assertExists()
         rule.onNodeWithContentDescription("1 de octubre de 2026, tomada").assertExists()
         rule.onNodeWithContentDescription("22 de octubre de 2026, día de descanso").assertExists()

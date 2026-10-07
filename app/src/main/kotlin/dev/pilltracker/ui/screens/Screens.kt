@@ -3,7 +3,6 @@ package dev.pilltracker.ui.screens
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -33,9 +32,9 @@ import dev.pilltracker.ui.components.TimeSelector
 import dev.pilltracker.ui.preview.PillPreviews
 import dev.pilltracker.ui.preview.Sample
 import dev.pilltracker.ui.theme.PillTrackerTheme
+import java.time.DayOfWeek
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
-import java.time.temporal.WeekFields
 
 /** Shared screen frame: system-bar insets, page padding, large title. */
 @Composable
@@ -92,52 +91,35 @@ fun SetupScreen(
     }
 }
 
-/** Today + one-tap Taken (AC3.1). */
+/** Today's one-tap Taken (AC3.1) above the month grid (AC4.1), all visible at first glance. */
 @Composable
 fun HomeScreen(
     state: HomeUiState,
     onEvent: (HomeUiEvent) -> Unit,
-    onHistory: () -> Unit,
 ) {
     val locale = LocalConfiguration.current.locales[0]
     val dateLabel = DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL).withLocale(locale).format(state.today)
     ScreenFrame(dateLabel.replaceFirstChar { it.titlecase(locale) }) {
-        Spacer(Modifier.weight(1f))
-        if (state.dayKind == DayKind.PLACEBO) {
-            Text(
-                stringResource(R.string.placebo_day),
-                Modifier.align(Alignment.CenterHorizontally),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+        Column(
+            Modifier.verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(24.dp),
+        ) {
+            if (state.dayKind == DayKind.PLACEBO) {
+                Text(stringResource(R.string.placebo_day), color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            if (state.dayKind == DayKind.BREAK) {
+                Text(stringResource(R.string.break_day), style = MaterialTheme.typography.headlineSmall)
+            } else {
+                TakenButton(state.taken, { onEvent(HomeUiEvent.Taken) })
+            }
+            MonthGrid(
+                state.month,
+                state.firstDayOfWeek,
+                state.weeks,
+                { onEvent(HomeUiEvent.PreviousMonth) },
+                { onEvent(HomeUiEvent.NextMonth) },
             )
         }
-        if (state.dayKind == DayKind.BREAK) {
-            Text(
-                stringResource(R.string.break_day),
-                Modifier.align(Alignment.CenterHorizontally),
-                style = MaterialTheme.typography.headlineSmall,
-            )
-        } else {
-            TakenButton(state.taken, { onEvent(HomeUiEvent.Taken) })
-        }
-        Spacer(Modifier.weight(1f))
-        TextButton(onHistory, Modifier.align(Alignment.CenterHorizontally)) { Text(stringResource(R.string.history)) }
-    }
-}
-
-/** Month grid of taken / not-taken days (AC4.1). Records only, no advice (AC4.2). */
-@Composable
-fun HistoryScreen(
-    state: HistoryUiState,
-    onEvent: (HistoryUiEvent) -> Unit,
-) {
-    ScreenFrame(stringResource(R.string.history)) {
-        MonthGrid(
-            state.month,
-            state.firstDayOfWeek,
-            state.weeks,
-            { onEvent(HistoryUiEvent.Previous) },
-            { onEvent(HistoryUiEvent.Next) },
-        )
     }
 }
 
@@ -149,30 +131,23 @@ private fun SetupPreview() = PillTrackerTheme { SetupScreen(SetupUiState(), {}, 
 @Composable
 private fun SetupDeniedPreview() = PillTrackerTheme { SetupScreen(SetupUiState(permissionDenied = true), {}, {}, {}) }
 
-@PillPreviews
-@Composable
-private fun HomeUntakenPreview() = PillTrackerTheme { HomeScreen(HomeUiState(Sample.today), {}, {}) }
+private val sampleHome = HomeUiState(Sample.today, month = Sample.month, weeks = Sample.weeks(DayOfWeek.MONDAY))
 
 @PillPreviews
 @Composable
-private fun HomeTakenPreview() = PillTrackerTheme { HomeScreen(HomeUiState(Sample.today, taken = true), {}, {}) }
+private fun HomeUntakenPreview() = PillTrackerTheme { HomeScreen(sampleHome, {}) }
 
 @PillPreviews
 @Composable
-private fun HomePlaceboPreview() =
-    PillTrackerTheme { HomeScreen(HomeUiState(Sample.today, dayKind = DayKind.PLACEBO), {}, {}) }
+private fun HomeTakenPreview() = PillTrackerTheme { HomeScreen(sampleHome.copy(taken = true), {}) }
+
+@PillPreviews
+@Composable
+private fun HomePlaceboPreview() = PillTrackerTheme { HomeScreen(sampleHome.copy(dayKind = DayKind.PLACEBO), {}) }
 
 @PillPreviews
 @Composable
 private fun HomeBreakPreview() =
     PillTrackerTheme {
-        HomeScreen(HomeUiState(Sample.today, dayKind = DayKind.BREAK), {}, {})
-    }
-
-@PillPreviews
-@Composable
-private fun HistoryPreview() =
-    PillTrackerTheme {
-        val first = WeekFields.of(LocalConfiguration.current.locales[0]).firstDayOfWeek
-        HistoryScreen(HistoryUiState(Sample.month, first, Sample.weeks(first)), {})
+        HomeScreen(sampleHome.copy(dayKind = DayKind.BREAK), {})
     }

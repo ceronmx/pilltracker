@@ -139,7 +139,7 @@ class ViewModelsTest {
     fun homeShowsDayKindFromPack() {
         settings.settings.value = Settings(PackType.TWENTY_ONE_PLUS_SEVEN, LocalDate.of(2026, 10, 1), LocalTime.NOON)
         val clock = clockAt(LocalDate.of(2026, 10, 21), LocalTime.NOON) // pill 21
-        val vm = HomeViewModel(clock, repo, settings)
+        val vm = HomeViewModel(clock, MONDAY, repo, settings)
         assertEquals(DayKind.ACTIVE, vm.state.value.dayKind)
         clock.instant = clock.instant.plusSeconds(24 * 3600) // day 22
         vm.onEvent(HomeUiEvent.Resumed)
@@ -149,9 +149,9 @@ class ViewModelsTest {
     }
 
     @Test
-    fun historyMarksBreakAndPlaceboDays() {
+    fun calendarMarksBreakAndPlaceboDays() {
         settings.settings.value = Settings(PackType.TWENTY_ONE_PLUS_SEVEN, LocalDate.of(2026, 10, 1), LocalTime.NOON)
-        val vm = HistoryViewModel(clockAt(LocalDate.of(2026, 10, 25), LocalTime.NOON), MONDAY, repo, settings)
+        val vm = HomeViewModel(clockAt(LocalDate.of(2026, 10, 25), LocalTime.NOON), MONDAY, repo, settings)
         val cells = vm.state.value.weeks.flatten().filterNotNull()
         assertEquals(DayStatus.NOT_TAKEN, cells.first { it.date.dayOfMonth == 21 }.status)
         assertEquals(DayStatus.BREAK, cells.first { it.date.dayOfMonth == 22 }.status) // past break: never "not taken"
@@ -166,7 +166,7 @@ class ViewModelsTest {
     @Test
     fun takenStoresPillDayAndInstantAndTwiceIsANoOp() {
         val clock = clockAt(LocalDate.of(2026, 10, 6), LocalTime.of(8, 0))
-        val vm = HomeViewModel(clock, repo, settings)
+        val vm = HomeViewModel(clock, MONDAY, repo, settings)
         vm.onEvent(HomeUiEvent.Taken)
         val first = repo.intakes.value
         clock.instant = clock.instant.plusSeconds(60)
@@ -179,7 +179,7 @@ class ViewModelsTest {
     @Test
     fun homeRollsOverAtMidnightOnResume() {
         val clock = clockAt(LocalDate.of(2026, 10, 5), LocalTime.of(23, 59))
-        val vm = HomeViewModel(clock, repo, settings)
+        val vm = HomeViewModel(clock, MONDAY, repo, settings)
         vm.onEvent(HomeUiEvent.Taken)
         assertEquals(LocalDate.of(2026, 10, 5), vm.state.value.today)
 
@@ -192,7 +192,7 @@ class ViewModelsTest {
     @Test
     fun takenLogsTheCurrentDayEvenWithoutResume() {
         val clock = clockAt(LocalDate.of(2026, 10, 5), LocalTime.of(23, 59))
-        val vm = HomeViewModel(clock, repo, settings)
+        val vm = HomeViewModel(clock, MONDAY, repo, settings)
         clock.instant = clock.instant.plusSeconds(120)
         vm.onEvent(HomeUiEvent.Taken)
         assertEquals(setOf(LocalDate.of(2026, 10, 6)), repo.intakes.value.keys)
@@ -202,7 +202,7 @@ class ViewModelsTest {
     fun todayFollowsTravelZoneChange() {
         // Same instant: already Oct 6 in Madrid, still Oct 5 in New York.
         val clock = clockAt(LocalDate.of(2026, 10, 6), LocalTime.of(2, 0))
-        val vm = HomeViewModel(clock, repo, settings)
+        val vm = HomeViewModel(clock, MONDAY, repo, settings)
         clock.zoneId = ZoneId.of("America/New_York")
         vm.onEvent(HomeUiEvent.Resumed)
         assertEquals(LocalDate.of(2026, 10, 5), vm.state.value.today)
@@ -211,14 +211,14 @@ class ViewModelsTest {
     @Test
     fun todayOnDstChangeDay() {
         // Europe falls back on 2026-10-25 at 03:00 -> 02:00.
-        val vm = HomeViewModel(clockAt(LocalDate.of(2026, 10, 25), LocalTime.of(2, 30)), repo, settings)
+        val vm = HomeViewModel(clockAt(LocalDate.of(2026, 10, 25), LocalTime.of(2, 30)), MONDAY, repo, settings)
         assertEquals(LocalDate.of(2026, 10, 25), vm.state.value.today)
     }
 
     @Test
-    fun historyShowsTakenNotTakenUpcomingAndNavigatesMonths() {
+    fun calendarShowsTakenNotTakenUpcomingAndNavigatesMonths() {
         repo.intakes.value = mapOf(LocalDate.of(2026, 10, 3) to Instant.EPOCH)
-        val vm = HistoryViewModel(clockAt(LocalDate.of(2026, 10, 6), LocalTime.NOON), MONDAY, repo, settings)
+        val vm = HomeViewModel(clockAt(LocalDate.of(2026, 10, 6), LocalTime.NOON), MONDAY, repo, settings)
         val cells = vm.state.value.weeks.flatten().filterNotNull()
         assertEquals(YearMonth.of(2026, 10), vm.state.value.month)
         assertEquals(LocalDate.of(2026, 10, 6), cells.single { it.isToday }.date)
@@ -226,18 +226,42 @@ class ViewModelsTest {
         assertEquals(DayStatus.NOT_TAKEN, cells.first { it.date.dayOfMonth == 5 }.status)
         assertEquals(DayStatus.UPCOMING, cells.first { it.date.dayOfMonth == 7 }.status)
 
-        vm.onEvent(HistoryUiEvent.Previous)
+        vm.onEvent(HomeUiEvent.PreviousMonth)
         assertEquals(YearMonth.of(2026, 9), vm.state.value.month)
         assertFalse(vm.state.value.weeks.flatten().filterNotNull().any { it.isToday })
-        vm.onEvent(HistoryUiEvent.Next)
-        vm.onEvent(HistoryUiEvent.Next)
+        vm.onEvent(HomeUiEvent.NextMonth)
+        vm.onEvent(HomeUiEvent.NextMonth)
         assertEquals(YearMonth.of(2026, 11), vm.state.value.month)
     }
 
     @Test
-    fun historyUpdatesWhenAPillIsLogged() {
-        val vm = HistoryViewModel(clockAt(LocalDate.of(2026, 10, 6), LocalTime.NOON), MONDAY, repo, settings)
+    fun calendarUpdatesWhenAPillIsLogged() {
+        val vm = HomeViewModel(clockAt(LocalDate.of(2026, 10, 6), LocalTime.NOON), MONDAY, repo, settings)
         repo.intakes.value = mapOf(LocalDate.of(2026, 10, 6) to Instant.EPOCH)
+        assertEquals(DayStatus.TAKEN, vm.state.value.weeks.flatten().filterNotNull().single { it.isToday }.status)
+    }
+
+    @Test
+    fun resumeReturnsCalendarToTheCurrentMonth() {
+        val clock = clockAt(LocalDate.of(2026, 10, 31), LocalTime.of(23, 59))
+        val vm = HomeViewModel(clock, MONDAY, repo, settings)
+        vm.onEvent(HomeUiEvent.PreviousMonth)
+        clock.instant = clock.instant.plusSeconds(60) // Nov 1
+        vm.onEvent(HomeUiEvent.Resumed)
+        assertEquals(YearMonth.of(2026, 11), vm.state.value.month)
+        assertEquals(
+            LocalDate.of(2026, 11, 1),
+            vm.state.value.weeks.flatten().filterNotNull().single { it.isToday }.date,
+        )
+    }
+
+    @Test
+    fun takenTodayShowsInTheCalendarWhileViewingAnotherMonth() {
+        val vm = HomeViewModel(clockAt(LocalDate.of(2026, 10, 6), LocalTime.NOON), MONDAY, repo, settings)
+        vm.onEvent(HomeUiEvent.PreviousMonth)
+        vm.onEvent(HomeUiEvent.Taken)
+        assertTrue(vm.state.value.taken)
+        vm.onEvent(HomeUiEvent.NextMonth)
         assertEquals(DayStatus.TAKEN, vm.state.value.weeks.flatten().filterNotNull().single { it.isToday }.status)
     }
 }

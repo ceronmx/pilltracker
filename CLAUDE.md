@@ -16,7 +16,7 @@ A 100% local Android app that reminds one person to take a daily birth-control p
 - Use plurals/format args (`%1$s`) instead of string concatenation; format dates with the locale-aware `java.time` formatters.
 - Neutral notification wording applies in both languages (e.g. "Time for your daily check-in" / "Es hora de tu registro diario").
 - CI/`check` must fail if a string key exists in one locale and not the other (Android lint `MissingTranslation` as error).
-- UI tests cover both locales for the three screens.
+- UI tests cover both locales for both screens (setup, home with month grid).
 
 ## Hard constraints (never violate)
 1. **No network.** The manifest must NOT declare `android.permission.INTERNET` (or any network-state permission). Do not add networking libraries (OkHttp, Retrofit, Ktor, Firebase, analytics, crash reporters). CI enforces this.
@@ -47,7 +47,7 @@ ui (Compose, ViewModels) -> domain (use cases, models, rules) <- data (Room, rep
 ## Testing rules
 - Domain: plain JUnit5 tests, written **before** the implementation. Target 100% branch coverage on `domain/rules`.
 - Data: Room in-memory DB tests plus migration tests (`MigrationTestHelper`) for every schema bump.
-- UI: a few Compose UI tests for the three screens. No UI test for logic that belongs in the domain.
+- UI: a few Compose UI tests for the two screens (setup, home). No UI test for logic that belongs in the domain.
 - Use fakes (`Clock.fixed`, `FakeReminderScheduler`, `InMemoryIntakeRepository`), not mocking frameworks, for our own interfaces.
 - A task is not done until `./gradlew check` passes.
 

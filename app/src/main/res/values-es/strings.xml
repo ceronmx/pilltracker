@@ -25,9 +25,8 @@
     <string name="taken_today">Registrado hoy</string>
     <string name="break_day">Día de descanso</string>
     <string name="placebo_day">Día de placebo</string>
-    <string name="history">Historial</string>
 
-    <!-- History -->
+    <!-- Month grid -->
     <string name="previous_month">Mes anterior</string>
     <string name="next_month">Mes siguiente</string>
     <string name="day_taken">%1$s, tomada</string>

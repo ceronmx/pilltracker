@@ -112,17 +112,25 @@ class SetupViewModel
         }
     }
 
+/** Today's Taken / Break state and the month grid on one screen (AC3.1, AC4.1). */
 data class HomeUiState(
     val today: LocalDate,
     val taken: Boolean = false,
     val dayKind: DayKind = DayKind.ACTIVE,
+    val month: YearMonth = YearMonth.from(today),
+    val firstDayOfWeek: DayOfWeek = DayOfWeek.MONDAY,
+    val weeks: List<List<DayCell?>> = emptyList(),
 )
 
 sealed interface HomeUiEvent {
     data object Taken : HomeUiEvent
 
-    /** App came to the foreground: re-read "today" (midnight passed, or the zone changed). */
+    /** App came to the foreground: re-read "today" (midnight passed, or the zone changed), back to its month. */
     data object Resumed : HomeUiEvent
+
+    data object PreviousMonth : HomeUiEvent
+
+    data object NextMonth : HomeUiEvent
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -131,85 +139,59 @@ class HomeViewModel
     @Inject
     constructor(
         private val clock: Clock,
+        private val firstDayOfWeek: DayOfWeek,
         private val intakes: IntakeRepository,
         settings: SettingsRepository,
     ) : ViewModel() {
         private val today = MutableStateFlow(LocalDate.now(clock))
+        private val month = MutableStateFlow(YearMonth.from(today.value))
 
         val state: StateFlow<HomeUiState> =
-            today
-                .flatMapLatest { day ->
-                    combine(intakes.takenDays(day, day), settings.settings) { taken, s ->
-                        HomeUiState(day, day in taken, kindOf(s, day))
-                    }
-                }.stateIn(viewModelScope, SharingStarted.Eagerly, HomeUiState(today.value))
+            combine(today, month, ::Pair)
+                .flatMapLatest { (day, m) ->
+                    // One query covers the shown month and today, which may lie outside it.
+                    val from = minOf(m.atDay(1), day)
+                    val to = maxOf(m.atEndOfMonth(), day)
+                    combine(intakes.takenDays(from, to), settings.settings) { taken, s -> stateFor(day, m, taken, s) }
+                }.stateIn(viewModelScope, SharingStarted.Eagerly, stateFor(today.value, month.value, emptySet(), null))
 
         fun onEvent(event: HomeUiEvent) {
-            // Both events re-read the clock, so a tap after midnight logs the new pill day.
-            today.value = LocalDate.now(clock)
-            if (event == HomeUiEvent.Taken) {
-                viewModelScope.launch { intakes.markTaken(today.value, clock.instant()) }
-            }
-        }
-    }
-
-data class HistoryUiState(
-    val month: YearMonth,
-    val firstDayOfWeek: DayOfWeek,
-    val weeks: List<List<DayCell?>>,
-)
-
-sealed interface HistoryUiEvent {
-    data object Previous : HistoryUiEvent
-
-    data object Next : HistoryUiEvent
-}
-
-@OptIn(ExperimentalCoroutinesApi::class)
-@HiltViewModel
-class HistoryViewModel
-    @Inject
-    constructor(
-        clock: Clock,
-        private val firstDayOfWeek: DayOfWeek,
-        intakes: IntakeRepository,
-        settings: SettingsRepository,
-    ) : ViewModel() {
-        private val today = LocalDate.now(clock)
-        private val month = MutableStateFlow(YearMonth.from(today))
-
-        val state: StateFlow<HistoryUiState> =
-            month
-                .flatMapLatest { m ->
-                    combine(intakes.takenDays(m.atDay(1), m.atEndOfMonth()), settings.settings) { taken, s ->
-                        stateFor(m, taken, s)
-                    }
-                }.stateIn(viewModelScope, SharingStarted.Eagerly, stateFor(month.value, emptySet(), null))
-
-        fun onEvent(event: HistoryUiEvent) =
-            month.update {
-                when (event) {
-                    HistoryUiEvent.Previous -> it.minusMonths(1)
-                    HistoryUiEvent.Next -> it.plusMonths(1)
+            when (event) {
+                HomeUiEvent.PreviousMonth -> month.update { it.minusMonths(1) }
+                HomeUiEvent.NextMonth -> month.update { it.plusMonths(1) }
+                // Both re-read the clock, so a tap after midnight logs the new pill day.
+                HomeUiEvent.Resumed -> {
+                    today.value = LocalDate.now(clock)
+                    month.value = YearMonth.from(today.value)
+                }
+                HomeUiEvent.Taken -> {
+                    today.value = LocalDate.now(clock)
+                    viewModelScope.launch { intakes.markTaken(today.value, clock.instant()) }
                 }
             }
+        }
 
         private fun stateFor(
+            today: LocalDate,
             month: YearMonth,
             taken: Set<LocalDate>,
             settings: Settings?,
-        ) = HistoryUiState(
+        ) = HomeUiState(
+            today = today,
+            taken = today in taken,
+            dayKind = kindOf(settings, today),
             month = month,
             firstDayOfWeek = firstDayOfWeek,
             weeks =
                 monthLayout(month, firstDayOfWeek).map {
                         week ->
-                    week.map { it?.let { cell(it, taken, settings) } }
+                    week.map { it?.let { cell(it, today, taken, settings) } }
                 },
         )
 
         private fun cell(
             date: LocalDate,
+            today: LocalDate,
             taken: Set<LocalDate>,
             settings: Settings?,
         ): DayCell {

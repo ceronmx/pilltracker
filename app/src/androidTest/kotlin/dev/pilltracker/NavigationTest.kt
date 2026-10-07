@@ -10,7 +10,7 @@ import androidx.test.rule.GrantPermissionRule
 import org.junit.Rule
 import org.junit.Test
 
-/** Setup -> Home -> History through the real activity, Hilt graph and NavHost. */
+/** Setup -> Home (Taken + month grid) through the real activity, Hilt graph and NavHost. */
 class NavigationTest {
     @get:Rule(order = 0)
     val notifications: GrantPermissionRule =
@@ -21,7 +21,7 @@ class NavigationTest {
 
     private fun str(id: Int) = rule.activity.getString(id)
 
-    @Test fun enableLeadsHomeThenTakenThenHistory() {
+    @Test fun enableLeadsHomeThenTakenWithMonthGrid() {
         // The start screen appears once settings are read from Room, which Compose tests don't wait for.
         rule.waitUntil(
             5_000,
@@ -29,7 +29,6 @@ class NavigationTest {
         rule.onNodeWithText(str(R.string.enable_reminders)).performClick()
         rule.onNodeWithText(str(R.string.taken)).performClick()
         rule.onNodeWithText(str(R.string.taken_today)).assertExists()
-        rule.onNodeWithText(str(R.string.history)).performClick()
         rule.onNodeWithContentDescription(str(R.string.next_month)).assertExists()
     }
 }
