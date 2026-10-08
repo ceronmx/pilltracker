@@ -126,6 +126,7 @@ fun HomeScreen(
     state: HomeUiState,
     onEvent: (HomeUiEvent) -> Unit,
     onSettings: () -> Unit,
+    onFixNotifications: () -> Unit = {},
 ) {
     val locale = LocalConfiguration.current.locales[0]
     val dateLabel = DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL).withLocale(locale).format(state.today)
@@ -137,6 +138,7 @@ fun HomeScreen(
             Modifier.verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {
+            if (state.notificationsOff) PermissionNotice(onFixNotifications)
             if (state.dayKind == DayKind.PLACEBO) {
                 Text(stringResource(R.string.placebo_day), color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
@@ -246,6 +248,13 @@ private val sampleHome = HomeUiState(Sample.today, month = Sample.month, weeks =
 @PillPreviews
 @Composable
 private fun HomeUntakenPreview() = PillTrackerTheme { HomeScreen(sampleHome, {}, {}) }
+
+@PillPreviews
+@Composable
+private fun HomeNotificationsOffPreview() =
+    PillTrackerTheme {
+        HomeScreen(sampleHome.copy(notificationsOff = true), {}, {})
+    }
 
 @PillPreviews
 @Composable

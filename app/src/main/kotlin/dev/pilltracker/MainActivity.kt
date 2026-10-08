@@ -75,9 +75,19 @@ private fun PillTrackerNavHost(start: Route) {
         composable(Route.Home.name) {
             val vm: HomeViewModel = hiltViewModel()
             val state by vm.state.collectAsState()
-            LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { vm.onEvent(HomeUiEvent.Resumed) }
+            val context = LocalContext.current
+            LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+                vm.onEvent(HomeUiEvent.Resumed)
+                // Switched off after setup (or never allowed): warn on Home, with a way to fix it.
+                vm.onEvent(HomeUiEvent.NotificationsChecked(notificationsAllowed(context)))
+            }
             var showSettings by rememberSaveable { mutableStateOf(false) }
-            HomeScreen(state, vm::onEvent, onSettings = { showSettings = true })
+            HomeScreen(
+                state,
+                vm::onEvent,
+                onSettings = { showSettings = true },
+                onFixNotifications = { context.startActivity(appNotificationSettings(context)) },
+            )
             if (showSettings) {
                 SettingsRoute(onClose = { showSettings = false }) {
                     // All data deleted (AC7.3): back to Setup, with no way back to Home.

@@ -203,6 +203,16 @@ class ViewModelsTest {
     }
 
     @Test
+    fun homeWarnsWhileNotificationsAreOff() {
+        val vm = HomeViewModel(clockAt(oct6, LocalTime.NOON), MONDAY, repo, settings)
+        assertFalse(vm.state.value.notificationsOff)
+        vm.onEvent(HomeUiEvent.NotificationsChecked(allowed = false))
+        assertTrue(vm.state.value.notificationsOff)
+        vm.onEvent(HomeUiEvent.NotificationsChecked(allowed = true))
+        assertFalse(vm.state.value.notificationsOff)
+    }
+
+    @Test
     fun homeRollsOverAtMidnightOnResume() {
         val clock = clockAt(LocalDate.of(2026, 10, 5), LocalTime.of(23, 59))
         val vm = HomeViewModel(clock, MONDAY, repo, settings)

@@ -122,6 +122,8 @@ data class HomeUiState(
     val month: YearMonth = YearMonth.from(today),
     val firstDayOfWeek: DayOfWeek = DayOfWeek.MONDAY,
     val weeks: List<List<DayCell?>> = emptyList(),
+    /** Notifications are switched off in system settings: reminders can't show (x6z). */
+    val notificationsOff: Boolean = false,
 )
 
 sealed interface HomeUiEvent {
@@ -131,6 +133,9 @@ sealed interface HomeUiEvent {
     data object Resumed : HomeUiEvent
 
     data object PreviousMonth : HomeUiEvent
+
+    /** Result of the platform check on resume; the ViewModel stays free of Android APIs. */
+    data class NotificationsChecked(val allowed: Boolean) : HomeUiEvent
 
     data object NextMonth : HomeUiEvent
 }
@@ -147,6 +152,7 @@ class HomeViewModel
     ) : ViewModel() {
         private val today = MutableStateFlow(LocalDate.now(clock))
         private val month = MutableStateFlow(YearMonth.from(today.value))
+        private val notificationsOff = MutableStateFlow(false)
 
         val state: StateFlow<HomeUiState> =
             combine(today, month, ::Pair)
@@ -155,12 +161,14 @@ class HomeViewModel
                     val from = minOf(m.atDay(1), day)
                     val to = maxOf(m.atEndOfMonth(), day)
                     combine(intakes.takenDays(from, to), settings.settings) { taken, s -> stateFor(day, m, taken, s) }
-                }.stateIn(viewModelScope, SharingStarted.Eagerly, stateFor(today.value, month.value, emptySet(), null))
+                }.combine(notificationsOff) { s, off -> s.copy(notificationsOff = off) }
+                .stateIn(viewModelScope, SharingStarted.Eagerly, stateFor(today.value, month.value, emptySet(), null))
 
         fun onEvent(event: HomeUiEvent) {
             when (event) {
                 HomeUiEvent.PreviousMonth -> month.update { it.minusMonths(1) }
                 HomeUiEvent.NextMonth -> month.update { it.plusMonths(1) }
+                is HomeUiEvent.NotificationsChecked -> notificationsOff.value = !event.allowed
                 // Both re-read the clock, so a tap after midnight logs the new pill day.
                 HomeUiEvent.Resumed -> {
                     today.value = LocalDate.now(clock)

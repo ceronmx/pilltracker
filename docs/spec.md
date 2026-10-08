@@ -12,6 +12,7 @@ A 100% local Android app: remind one person to take a daily pill, log it in one 
 - AC2.1 A notification fires daily within 10 minutes after the chosen time while the phone is in use; on an idle phone it may wait until the phone wakes (inexact alarm, ADR 0004), except on break days (21 pills, days 22-28) (local zone; re-scheduled after reboot, time-zone change, and DST change).
 - AC2.2 Notification text is neutral ("Time for your daily check-in"), visibility `SECRET`.
 - AC2.3 The notification has a **Taken** action: one tap logs today's pill, dismisses the notification, no app launch.
+- AC2.4 Whenever notifications are not allowed (switched off after setup, or never allowed), Home shows the same neutral notice as setup (AC1.3) above the Taken button; its retry opens the app's notification settings. It disappears once notifications are allowed again. Logging keeps working either way.
 
 ## 3. Logging
 - AC3.1 Home is the single main screen: today's **Taken** button above the month history (section 4), all visible at first glance. One **Taken** button for today. One tap logs it; logging again the same pill day is a no-op.
