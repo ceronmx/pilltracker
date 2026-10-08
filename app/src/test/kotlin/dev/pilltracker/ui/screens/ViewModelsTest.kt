@@ -1,5 +1,6 @@
 package dev.pilltracker.ui.screens
 
+import dev.pilltracker.domain.GuineaPig
 import dev.pilltracker.domain.IntakeRepository
 import dev.pilltracker.domain.ReminderScheduler
 import dev.pilltracker.domain.Settings
@@ -303,6 +304,16 @@ class ViewModelsTest {
         assertFalse(vm.state.value.showTimePicker)
         assertEquals(saved.copy(reminderTime = LocalTime.of(21, 0)), settings.settings.value)
         assertEquals(listOf(LocalTime.of(21, 0)), scheduler.scheduled)
+    }
+
+    @Test
+    fun choosingAGuineaPigSavesItAndKeepsTheReminder() {
+        settings.settings.value = saved
+        val vm = SettingsViewModel(clockAt(oct6, LocalTime.NOON), settings, scheduler)
+        assertEquals(GuineaPig.TRICOLOR, vm.state.value.settings?.guineaPig)
+        vm.onEvent(SettingsUiEvent.GuineaPigChosen(GuineaPig.CREAM))
+        assertEquals(saved.copy(guineaPig = GuineaPig.CREAM), settings.settings.value)
+        assertEquals(emptyList<LocalTime>(), scheduler.scheduled)
     }
 
     @Test

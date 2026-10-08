@@ -37,6 +37,7 @@ import dev.pilltracker.R
 import dev.pilltracker.domain.rules.DayKind
 import dev.pilltracker.domain.rules.PackType
 import dev.pilltracker.ui.components.GuineaPigBackground
+import dev.pilltracker.ui.components.GuineaPigPicker
 import dev.pilltracker.ui.components.MonthGrid
 import dev.pilltracker.ui.components.PackTypeSelector
 import dev.pilltracker.ui.components.PermissionNotice
@@ -194,6 +195,7 @@ fun SettingsSheet(
                 }
                 TimeSelector(settings.reminderTime, { onEvent(SettingsUiEvent.TimeClicked) })
                 PillNumberStepper(state.dayOfPack, state.breakDay, { onEvent(SettingsUiEvent.DayOfPackChanged(it)) })
+                GuineaPigPicker(settings.guineaPig, { onEvent(SettingsUiEvent.GuineaPigChosen(it)) })
                 val packLabel =
                     if (settings.packType == PackType.WITH_PLACEBO) R.string.pack_placebo else R.string.pack_break
                 Row {

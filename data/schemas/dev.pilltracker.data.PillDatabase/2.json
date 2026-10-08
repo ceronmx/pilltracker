@@ -1,0 +1,85 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 2,
+    "identityHash": "134a016e274cd412e818bcc16a8e4669",
+    "entities": [
+      {
+        "tableName": "intake",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`pillDayEpochDay` INTEGER NOT NULL, `takenAtMillis` INTEGER NOT NULL, PRIMARY KEY(`pillDayEpochDay`))",
+        "fields": [
+          {
+            "fieldPath": "pillDayEpochDay",
+            "columnName": "pillDayEpochDay",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "takenAtMillis",
+            "columnName": "takenAtMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "pillDayEpochDay"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "settings",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `packType` TEXT NOT NULL, `packStartEpochDay` INTEGER NOT NULL, `reminderMinuteOfDay` INTEGER NOT NULL, `guineaPig` TEXT NOT NULL DEFAULT 'TRICOLOR', PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "packType",
+            "columnName": "packType",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "packStartEpochDay",
+            "columnName": "packStartEpochDay",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "reminderMinuteOfDay",
+            "columnName": "reminderMinuteOfDay",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "guineaPig",
+            "columnName": "guineaPig",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "'TRICOLOR'"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
+      }
+    ],
+    "views": [],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '134a016e274cd412e818bcc16a8e4669')"
+    ]
+  }
+}

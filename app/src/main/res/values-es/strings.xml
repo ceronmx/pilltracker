@@ -37,6 +37,11 @@
 
     <!-- Settings sheet -->
     <string name="settings">Ajustes</string>
+    <string name="guinea_pig_label">Cobaya</string>
+    <string name="guinea_pig_tricolor">Tricolor</string>
+    <string name="guinea_pig_ginger">Canela</string>
+    <string name="guinea_pig_black_white">Blanco y negro</string>
+    <string name="guinea_pig_cream">Crema</string>
     <string name="delete_all_data">Borrar todos los datos</string>
     <string name="delete_all_data_title">¿Borrar todos los datos?</string>
     <string name="delete_all_data_body">Esto elimina tu historial y tus ajustes de este teléfono y desactiva los recordatorios. No se puede deshacer.</string>

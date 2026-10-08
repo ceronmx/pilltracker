@@ -38,6 +38,11 @@
 
     <!-- Settings sheet -->
     <string name="settings">Settings</string>
+    <string name="guinea_pig_label">Guinea pig</string>
+    <string name="guinea_pig_tricolor">Tricolor</string>
+    <string name="guinea_pig_ginger">Ginger</string>
+    <string name="guinea_pig_black_white">Black and white</string>
+    <string name="guinea_pig_cream">Cream</string>
     <string name="delete_all_data">Delete all data</string>
     <string name="delete_all_data_title">Delete all data?</string>
     <string name="delete_all_data_body">This removes your history and settings from this phone and turns off reminders. It can\'t be undone.</string>

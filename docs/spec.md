@@ -39,6 +39,7 @@ A 100% local Android app: remind one person to take a daily pill, log it in one 
 - AC7.2 The sheet shows the reminder time, editable with the same picker as setup; a new time replaces the scheduled reminder at once. It shows the pack type read-only (changing it mid-pack would shift past break days; use Reset instead). It shows today's day of the pack with the setup stepper; changing it realigns the pack (e.g. a pack started late) by moving only the pack start: intake records are kept, past placebo/break marks follow the new start.
 - AC7.3 A **Reset** button asks for confirmation ("Delete all data?", Cancel / Delete). On Delete: all intakes and settings are deleted, the reminder alarm is cancelled, any shown notification is cleared, and the app returns to Setup with no way back to Home.
 - AC7.4 Neutral wording; no advice.
+- AC7.5 The sheet offers a choice of guinea pig (tricolor, preselected; ginger; black and white; cream), shown as pictures with accessible names in en and es. The choice changes every in-app guinea pig at once and is kept with the settings (deleted by Reset). Purely cosmetic: launcher and notification icons stay fixed, and setup does not ask (AC1.1 stays one tap).
 
 ## Out of scope
 Accounts, sync, cloud backup, analytics, medical guidance, widgets, wear, multiple users.

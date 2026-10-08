@@ -2,6 +2,7 @@ package dev.pilltracker.data
 
 import androidx.room.Room
 import androidx.test.platform.app.InstrumentationRegistry
+import dev.pilltracker.domain.GuineaPig
 import dev.pilltracker.domain.Settings
 import dev.pilltracker.domain.rules.PackType
 import kotlinx.coroutines.flow.first
@@ -67,7 +68,7 @@ class SettingsRepositoryTest {
             val first = Settings(PackType.WITH_PLACEBO, LocalDate.of(2026, 10, 1), LocalTime.of(9, 0))
             repo.save(first)
             assertEquals(first, repo.settings.first())
-            val second = Settings(PackType.WITH_BREAK, LocalDate.of(2026, 9, 20), LocalTime.of(21, 45))
+            val second = Settings(PackType.WITH_BREAK, LocalDate.of(2026, 9, 20), LocalTime.of(21, 45), GuineaPig.CREAM)
             repo.save(second)
             assertEquals(second, repo.settings.first())
         }

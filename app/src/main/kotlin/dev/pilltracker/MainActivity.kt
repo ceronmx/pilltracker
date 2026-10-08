@@ -27,6 +27,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
+import dev.pilltracker.domain.GuineaPig
 import dev.pilltracker.domain.SettingsRepository
 import dev.pilltracker.ui.screens.HomeScreen
 import dev.pilltracker.ui.screens.HomeUiEvent
@@ -52,7 +53,11 @@ class MainActivity : ComponentActivity() {
             val start by produceState<Route?>(null) {
                 value = if (settings.settings.first() == null) Route.Setup else Route.Home
             }
-            PillTrackerTheme { start?.let { PillTrackerNavHost(it) } }
+            // The chosen guinea pig (AC7.5) follows saved settings live; tricolor before setup.
+            val saved by settings.settings.collectAsState(null)
+            PillTrackerTheme(
+                guineaPig = saved?.guineaPig ?: GuineaPig.TRICOLOR,
+            ) { start?.let { PillTrackerNavHost(it) } }
         }
     }
 }

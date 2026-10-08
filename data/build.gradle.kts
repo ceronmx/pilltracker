@@ -17,6 +17,8 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions { jvmTarget = "17" }
+    // MigrationTestHelper reads the exported schemas from test assets.
+    sourceSets.getByName("androidTest").assets.srcDir("$projectDir/schemas")
 }
 
 // Exported schemas feed MigrationTestHelper on every schema bump (ADR 0003).

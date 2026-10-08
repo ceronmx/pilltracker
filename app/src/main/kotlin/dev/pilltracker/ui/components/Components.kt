@@ -1,6 +1,7 @@
 package dev.pilltracker.ui.components
 
 import android.text.format.DateFormat
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -11,6 +12,9 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -32,12 +36,15 @@ import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import dev.pilltracker.R
+import dev.pilltracker.domain.GuineaPig
 import dev.pilltracker.domain.rules.PACK_DAYS
 import dev.pilltracker.domain.rules.PackType
 import dev.pilltracker.ui.format.rememberTimeFormatter
@@ -132,6 +139,41 @@ fun TakenButton(
     }
 }
 
+private val pigNames =
+    mapOf(
+        GuineaPig.TRICOLOR to R.string.guinea_pig_tricolor,
+        GuineaPig.GINGER to R.string.guinea_pig_ginger,
+        GuineaPig.BLACK_WHITE to R.string.guinea_pig_black_white,
+        GuineaPig.CREAM to R.string.guinea_pig_cream,
+    )
+
+/** One tappable picture per guinea pig; the chosen one sits on a filled circle (AC7.5). */
+@Composable
+fun GuineaPigPicker(
+    selected: GuineaPig,
+    onSelect: (GuineaPig) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(stringResource(R.string.guinea_pig_label), style = MaterialTheme.typography.bodyLarge)
+        Row(Modifier.fillMaxWidth().selectableGroup(), horizontalArrangement = Arrangement.SpaceBetween) {
+            GuineaPig.entries.forEach { pig ->
+                val chosen = pig == selected
+                GuineaPigImage(
+                    Modifier
+                        .size(64.dp)
+                        .clip(CircleShape)
+                        .background(if (chosen) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent)
+                        .selectable(chosen, role = Role.RadioButton, onClick = { onSelect(pig) })
+                        .padding(6.dp),
+                    pig,
+                    stringResource(pigNames.getValue(pig)),
+                )
+            }
+        }
+    }
+}
+
 /** 21 + 7 (preselected) or 21 pills (AC1.1). */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -213,6 +255,10 @@ private fun TakenButtonTakenPreview() = PillTrackerTheme { TakenButton(taken = t
 @PillPreviews
 @Composable
 private fun PackTypeSelectorPreview() = PillTrackerTheme { PackTypeSelector(PackType.WITH_PLACEBO, {}) }
+
+@PillPreviews
+@Composable
+private fun GuineaPigPickerPreview() = PillTrackerTheme { GuineaPigPicker(GuineaPig.GINGER, {}) }
 
 @PillPreviews
 @Composable

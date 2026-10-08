@@ -1,6 +1,8 @@
 package dev.pilltracker.data
 
 import android.content.Context
+import androidx.room.AutoMigration
+import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Database
 import androidx.room.Entity
@@ -10,6 +12,7 @@ import androidx.room.PrimaryKey
 import androidx.room.Query
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import dev.pilltracker.domain.GuineaPig
 import dev.pilltracker.domain.IntakeRepository
 import dev.pilltracker.domain.Settings
 import dev.pilltracker.domain.SettingsRepository
@@ -49,6 +52,8 @@ data class SettingsEntity(
     val packType: String,
     val packStartEpochDay: Long,
     val reminderMinuteOfDay: Int,
+    /** [GuineaPig] name; the default fills rows saved before version 2. */
+    @ColumnInfo(defaultValue = "TRICOLOR") val guineaPig: String = GuineaPig.TRICOLOR.name,
 )
 
 @Dao
@@ -60,8 +65,12 @@ interface SettingsDao {
     suspend fun save(settings: SettingsEntity)
 }
 
-// ponytail: still version 1 because nothing has shipped; bump + MigrationTestHelper from the first release on.
-@Database(entities = [IntakeEntity::class, SettingsEntity::class], version = 1)
+// Every bump needs a MigrationTestHelper test (PillDatabaseMigrationTest).
+@Database(
+    entities = [IntakeEntity::class, SettingsEntity::class],
+    version = 2,
+    autoMigrations = [AutoMigration(from = 1, to = 2)],
+)
 abstract class PillDatabase : RoomDatabase() {
     abstract fun intakeDao(): IntakeDao
 
@@ -107,6 +116,7 @@ class RoomSettingsRepository(private val db: PillDatabase) : SettingsRepository 
                     PACK_CODES.entries.first { (_, code) -> code == it.packType }.key,
                     LocalDate.ofEpochDay(it.packStartEpochDay),
                     LocalTime.ofSecondOfDay(it.reminderMinuteOfDay * SECONDS_PER_MINUTE),
+                    GuineaPig.entries.firstOrNull { pig -> pig.name == it.guineaPig } ?: GuineaPig.TRICOLOR,
                 )
             }
         }
@@ -117,6 +127,7 @@ class RoomSettingsRepository(private val db: PillDatabase) : SettingsRepository 
                 packType = PACK_CODES.getValue(settings.packType),
                 packStartEpochDay = settings.packStart.toEpochDay(),
                 reminderMinuteOfDay = settings.reminderTime.toSecondOfDay() / SECONDS_PER_MINUTE.toInt(),
+                guineaPig = settings.guineaPig.name,
             ),
         )
 

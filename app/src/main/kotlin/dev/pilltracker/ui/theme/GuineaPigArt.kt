@@ -13,7 +13,7 @@ import androidx.compose.ui.graphics.vector.group
 import androidx.compose.ui.unit.dp
 import dev.pilltracker.domain.GuineaPig
 
-/** The guinea pig drawn in the app, provided by [PillTrackerTheme]. */
+/** The chosen guinea pig (AC7.5), provided by [PillTrackerTheme]. */
 val LocalGuineaPig = staticCompositionLocalOf { GuineaPig.TRICOLOR }
 
 private class Coat(

@@ -3,6 +3,7 @@ package dev.pilltracker.ui.screens
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dev.pilltracker.domain.GuineaPig
 import dev.pilltracker.domain.IntakeRepository
 import dev.pilltracker.domain.ReminderScheduler
 import dev.pilltracker.domain.Settings
@@ -229,6 +230,8 @@ sealed interface SettingsUiEvent {
 
     data class DayOfPackChanged(val day: Int) : SettingsUiEvent
 
+    data class GuineaPigChosen(val pig: GuineaPig) : SettingsUiEvent
+
     data object ResetClicked : SettingsUiEvent
 
     data object ResetDismissed : SettingsUiEvent
@@ -263,23 +266,13 @@ class SettingsViewModel
                 SettingsUiEvent.PickerDismissed -> ui.update { it.copy(showTimePicker = false) }
                 is SettingsUiEvent.TimePicked -> {
                     ui.update { it.copy(showTimePicker = false) }
-                    val current = state.value.settings ?: return
-                    viewModelScope.launch {
-                        settings.save(current.copy(reminderTime = event.time))
-                        reminders.scheduleNext(event.time)
-                    }
+                    change({ it.copy(reminderTime = event.time) }) { reminders.scheduleNext(event.time) }
                 }
-                is SettingsUiEvent.DayOfPackChanged -> {
-                    val current = state.value.settings ?: return
-                    val day = event.day.coerceIn(1, PACK_DAYS)
-                    // ponytail: one pack start, so past break/placebo marks shift with it; keep a start
-                    // history if she needs exact past packs. Intake records are untouched.
-                    viewModelScope.launch {
-                        settings.save(
-                            current.copy(packStart = packStart(LocalDate.now(clock), day)),
-                        )
-                    }
-                }
+                // ponytail: one pack start, so past break/placebo marks shift with it; keep a start
+                // history if she needs exact past packs. Intake records are untouched.
+                is SettingsUiEvent.DayOfPackChanged ->
+                    change({ it.copy(packStart = packStart(LocalDate.now(clock), event.day.coerceIn(1, PACK_DAYS))) })
+                is SettingsUiEvent.GuineaPigChosen -> change({ it.copy(guineaPig = event.pig) })
                 SettingsUiEvent.ResetClicked -> ui.update { it.copy(confirmReset = true) }
                 SettingsUiEvent.ResetDismissed -> ui.update { it.copy(confirmReset = false) }
                 SettingsUiEvent.ResetConfirmed ->
@@ -288,6 +281,18 @@ class SettingsViewModel
                         settings.deleteAll()
                         ui.update { it.copy(confirmReset = false, resetDone = true) }
                     }
+            }
+        }
+
+        /** Saves an edit of the stored settings, then runs [after]; no-op before setup. */
+        private fun change(
+            edit: (Settings) -> Settings,
+            after: () -> Unit = {},
+        ) {
+            val current = state.value.settings ?: return
+            viewModelScope.launch {
+                settings.save(edit(current))
+                after()
             }
         }
     }
