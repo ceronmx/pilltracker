@@ -32,6 +32,8 @@ class ReminderNotificationTest {
         val n = active().single()
         assertEquals(context.getString(R.string.notification_title), n.extras.getString(Notification.EXTRA_TITLE))
         assertEquals(Notification.VISIBILITY_SECRET, n.visibility)
+        // High importance = shown as a pop-up banner, not only in the shade.
+        assertEquals(NotificationManager.IMPORTANCE_HIGH, manager.getNotificationChannel(n.channelId).importance)
         assertEquals(context.getString(R.string.taken), n.actions.single().title)
 
         n.actions.single().actionIntent.send()

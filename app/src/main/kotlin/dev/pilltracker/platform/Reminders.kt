@@ -28,7 +28,11 @@ import java.time.LocalTime
 import javax.inject.Inject
 
 internal const val ACTION_REMIND = "dev.pilltracker.REMIND"
-private const val CHANNEL_ID = "daily"
+
+// High importance so the reminder pops up as a banner. Importance can't be raised on an existing channel,
+// hence a new id; the old default-importance "daily" channel is deleted.
+private const val CHANNEL_ID = "daily_reminder"
+private const val OLD_CHANNEL_ID = "daily"
 private const val NOTIFICATION_ID = 1
 private const val WINDOW_MILLIS = 10 * 60 * 1000L
 
@@ -127,8 +131,9 @@ fun showReminder(context: Context) {
         NotificationChannel(
             CHANNEL_ID,
             context.getString(R.string.notification_channel_name),
-            NotificationManager.IMPORTANCE_DEFAULT,
+            NotificationManager.IMPORTANCE_HIGH,
         ).apply { lockscreenVisibility = Notification.VISIBILITY_SECRET }
+    manager.deleteNotificationChannel(OLD_CHANNEL_ID)
     manager.createNotificationChannel(channel)
     val open =
         PendingIntent.getActivity(context, 0, Intent(context, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE)
