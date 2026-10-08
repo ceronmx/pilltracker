@@ -2,6 +2,7 @@ package dev.pilltracker.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
 import androidx.compose.material3.darkColorScheme
@@ -68,6 +69,53 @@ private val DarkColors =
         surfaceContainerHighest = Color(0xFF3C332C),
     )
 
+/** The accent roles that follow the chosen guinea pig; neutrals (background, surfaces) stay shared. */
+private class Accent(
+    val primary: Long,
+    val onPrimary: Long,
+    val primaryContainer: Long,
+    val onPrimaryContainer: Long,
+    val secondaryContainer: Long,
+    val onSecondaryContainer: Long,
+)
+
+// Light, dark per coat. Tricolor is the base palette above; ThemeTest checks AA contrast for all.
+private val accents =
+    mapOf(
+        GuineaPig.GINGER to
+            (
+                Accent(0xFFA04F00, 0xFFFFFFFF, 0xFFFFDCC2, 0xFF351000, 0xFFFFE0C2, 0xFF2E1500) to
+                    Accent(0xFFFFB783, 0xFF552100, 0xFF793100, 0xFFFFDBC8, 0xFF6B3A16, 0xFFFFDCC2)
+            ),
+        GuineaPig.BLACK_WHITE to
+            (
+                Accent(0xFF3A3330, 0xFFFFFFFF, 0xFFE6E1DE, 0xFF1E1B19, 0xFFE8E2DE, 0xFF1F1B18) to
+                    Accent(0xFFD6CFCA, 0xFF2B2522, 0xFF4A4542, 0xFFEDE7E3, 0xFF47423F, 0xFFEDE7E3)
+            ),
+        GuineaPig.CREAM to
+            (
+                Accent(0xFF8F4B4E, 0xFFFFFFFF, 0xFFFFD9D9, 0xFF3A0A10, 0xFFF6DDCB, 0xFF2C1810) to
+                    Accent(0xFFFFB2B5, 0xFF561D23, 0xFF723338, 0xFFFFD9D9, 0xFF5A4335, 0xFFF6DDCB)
+            ),
+    )
+
+/** The app's colors for [pig] (spec AC7.5): shared neutrals, coat accents. */
+internal fun colorSchemeFor(
+    pig: GuineaPig,
+    dark: Boolean,
+): ColorScheme {
+    val base = if (dark) DarkColors else LightColors
+    val a = accents[pig]?.let { if (dark) it.second else it.first } ?: return base
+    return base.copy(
+        primary = Color(a.primary),
+        onPrimary = Color(a.onPrimary),
+        primaryContainer = Color(a.primaryContainer),
+        onPrimaryContainer = Color(a.onPrimaryContainer),
+        secondaryContainer = Color(a.secondaryContainer),
+        onSecondaryContainer = Color(a.onSecondaryContainer),
+    )
+}
+
 // Large radii: cards 20dp. Buttons are pill-shaped by M3 default; extraLarge (dialogs, sheets) stays at M3's 28dp.
 private val IosShapes =
     Shapes(
@@ -84,6 +132,6 @@ fun PillTrackerTheme(
 ) {
     // ponytail: system font + default typography; add a Typography only if a design needs it.
     CompositionLocalProvider(LocalGuineaPig provides guineaPig) {
-        MaterialTheme(colorScheme = if (dark) DarkColors else LightColors, shapes = IosShapes, content = content)
+        MaterialTheme(colorScheme = colorSchemeFor(guineaPig, dark), shapes = IosShapes, content = content)
     }
 }
