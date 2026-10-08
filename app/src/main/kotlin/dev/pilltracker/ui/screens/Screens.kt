@@ -4,10 +4,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -26,12 +29,14 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import dev.pilltracker.R
 import dev.pilltracker.domain.rules.DayKind
 import dev.pilltracker.domain.rules.PackType
+import dev.pilltracker.ui.components.GuineaPigBackground
 import dev.pilltracker.ui.components.MonthGrid
 import dev.pilltracker.ui.components.PackTypeSelector
 import dev.pilltracker.ui.components.PermissionNotice
@@ -41,6 +46,7 @@ import dev.pilltracker.ui.components.TakenButton
 import dev.pilltracker.ui.components.TimeSelector
 import dev.pilltracker.ui.preview.PillPreviews
 import dev.pilltracker.ui.preview.Sample
+import dev.pilltracker.ui.theme.GuineaPigImage
 import dev.pilltracker.ui.theme.PillTrackerTheme
 import java.time.DayOfWeek
 import java.time.format.DateTimeFormatter
@@ -54,15 +60,17 @@ private fun ScreenFrame(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Scaffold { insets ->
-        Column(
-            Modifier.fillMaxSize().padding(insets).padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            Row {
-                Text(title, Modifier.weight(1f), style = MaterialTheme.typography.headlineLarge)
-                action()
+        GuineaPigBackground(Modifier.fillMaxSize()) {
+            Column(
+                Modifier.fillMaxSize().padding(insets).padding(24.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                Row {
+                    Text(title, Modifier.weight(1f), style = MaterialTheme.typography.headlineLarge)
+                    action()
+                }
+                content()
             }
-            content()
         }
     }
 }
@@ -81,6 +89,8 @@ fun SetupScreen(
             Modifier.weight(1f).verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
+            // Decorative mascot; nothing to announce.
+            GuineaPigImage(Modifier.size(96.dp).align(Alignment.CenterHorizontally))
             PackTypeSelector(state.packType, { onEvent(SetupUiEvent.PackTypeChosen(it)) })
             PillNumberStepper(
                 state.pillNumber,
@@ -130,7 +140,11 @@ fun HomeScreen(
                 Text(stringResource(R.string.placebo_day), color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             if (state.dayKind == DayKind.BREAK) {
-                Text(stringResource(R.string.break_day), style = MaterialTheme.typography.headlineSmall)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    GuineaPigImage(Modifier.size(48.dp))
+                    Spacer(Modifier.width(12.dp))
+                    Text(stringResource(R.string.break_day), style = MaterialTheme.typography.headlineSmall)
+                }
             } else {
                 TakenButton(state.taken, { onEvent(HomeUiEvent.Taken) })
             }
@@ -141,6 +155,16 @@ fun HomeScreen(
                 { onEvent(HomeUiEvent.PreviousMonth) },
                 { onEvent(HomeUiEvent.NextMonth) },
             )
+            // A little herd in the space under the calendar; decorative.
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+                verticalAlignment = Alignment.Bottom,
+            ) {
+                GuineaPigImage(Modifier.size(36.dp))
+                GuineaPigImage(Modifier.size(28.dp))
+                GuineaPigImage(Modifier.size(36.dp).graphicsLayer(scaleX = -1f))
+            }
         }
     }
 }
@@ -155,26 +179,33 @@ fun SettingsSheet(
 ) {
     val settings = state.settings ?: return
     ModalBottomSheet(onClose) {
-        Column(
-            Modifier.padding(horizontal = 24.dp).padding(bottom = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            Text(stringResource(R.string.settings), style = MaterialTheme.typography.headlineSmall)
-            TimeSelector(settings.reminderTime, { onEvent(SettingsUiEvent.TimeClicked) })
-            PillNumberStepper(state.dayOfPack, state.breakDay, { onEvent(SettingsUiEvent.DayOfPackChanged(it)) })
-            Row {
-                Text(stringResource(R.string.pack_type_label), Modifier.weight(1f))
-                Text(
-                    stringResource(
-                        if (settings.packType == PackType.WITH_PLACEBO) R.string.pack_placebo else R.string.pack_break,
-                    ),
-                )
+        GuineaPigBackground {
+            Column(
+                Modifier.padding(horizontal = 24.dp).padding(bottom = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        stringResource(R.string.settings),
+                        Modifier.weight(1f),
+                        style = MaterialTheme.typography.headlineSmall,
+                    )
+                    GuineaPigImage(Modifier.size(48.dp))
+                }
+                TimeSelector(settings.reminderTime, { onEvent(SettingsUiEvent.TimeClicked) })
+                PillNumberStepper(state.dayOfPack, state.breakDay, { onEvent(SettingsUiEvent.DayOfPackChanged(it)) })
+                val packLabel =
+                    if (settings.packType == PackType.WITH_PLACEBO) R.string.pack_placebo else R.string.pack_break
+                Row {
+                    Text(stringResource(R.string.pack_type_label), Modifier.weight(1f))
+                    Text(stringResource(packLabel))
+                }
+                TextButton(
+                    { onEvent(SettingsUiEvent.ResetClicked) },
+                    Modifier.align(Alignment.CenterHorizontally),
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                ) { Text(stringResource(R.string.delete_all_data)) }
             }
-            TextButton(
-                { onEvent(SettingsUiEvent.ResetClicked) },
-                Modifier.align(Alignment.CenterHorizontally),
-                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
-            ) { Text(stringResource(R.string.delete_all_data)) }
         }
     }
     if (state.showTimePicker) {
@@ -187,6 +218,7 @@ fun SettingsSheet(
     if (state.confirmReset) {
         AlertDialog(
             onDismissRequest = { onEvent(SettingsUiEvent.ResetDismissed) },
+            icon = { GuineaPigImage(Modifier.size(56.dp)) },
             title = { Text(stringResource(R.string.delete_all_data_title)) },
             text = { Text(stringResource(R.string.delete_all_data_body)) },
             confirmButton = {

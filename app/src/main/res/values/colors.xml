@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Theme primary (light), so the icon matches the app. -->
-    <color name="ic_launcher_background">#007AFF</color>
+    <!-- Apricot behind the guinea pig: contrasts with both its cream body and brown head. -->
+    <color name="ic_launcher_background">#FFD3A0</color>
+    <!-- Theme primary (light): notification accent. -->
+    <color name="brand">#8B5A2B</color>
 </resources>

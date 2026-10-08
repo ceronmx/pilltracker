@@ -5,6 +5,9 @@ import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 import java.time.LocalTime
 
+/** The app's guinea pig art . Cosmetic only. */
+enum class GuineaPig { TRICOLOR, GINGER, BLACK_WHITE, CREAM }
+
 /** Setup answers (AC1.1, AC1.4). [packStart] is the day of pill 1 of the current pack. */
 data class Settings(
     val packType: PackType,

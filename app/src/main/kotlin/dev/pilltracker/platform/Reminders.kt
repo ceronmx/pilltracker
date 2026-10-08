@@ -138,6 +138,7 @@ fun showReminder(context: Context) {
     val notification =
         Notification.Builder(context, CHANNEL_ID)
             .setSmallIcon(icon)
+            .setColor(context.getColor(R.color.brand))
             .setContentTitle(context.getString(R.string.notification_title))
             .setVisibility(Notification.VISIBILITY_SECRET)
             .setContentIntent(open)

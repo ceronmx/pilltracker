@@ -5,9 +5,12 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -40,6 +43,7 @@ import dev.pilltracker.domain.rules.PackType
 import dev.pilltracker.ui.format.rememberTimeFormatter
 import dev.pilltracker.ui.preview.PillPreviews
 import dev.pilltracker.ui.preview.Sample
+import dev.pilltracker.ui.theme.GuineaPigImage
 import dev.pilltracker.ui.theme.PillTrackerTheme
 import java.time.LocalTime
 
@@ -96,9 +100,12 @@ fun PermissionNotice(
     modifier: Modifier = Modifier,
 ) {
     Card(modifier.fillMaxWidth()) {
-        Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text(stringResource(R.string.permission_denied), style = MaterialTheme.typography.bodyMedium)
-            FilledTonalButton(onRetry) { Text(stringResource(R.string.retry)) }
+        Row(Modifier.padding(20.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(stringResource(R.string.permission_denied), style = MaterialTheme.typography.bodyMedium)
+                FilledTonalButton(onRetry) { Text(stringResource(R.string.retry)) }
+            }
+            GuineaPigImage(Modifier.size(48.dp))
         }
     }
 }
@@ -115,6 +122,9 @@ fun TakenButton(
         enabled = !taken,
         modifier = modifier.fillMaxWidth().heightIn(min = 64.dp),
     ) {
+        // Decorative: the button text already says what it does.
+        GuineaPigImage(Modifier.size(40.dp))
+        Spacer(Modifier.width(12.dp))
         Text(
             stringResource(if (taken) R.string.taken_today else R.string.taken),
             style = MaterialTheme.typography.titleLarge,
