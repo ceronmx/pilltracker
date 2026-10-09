@@ -17,3 +17,8 @@ Every dependency needs a reason here. No networking, analytics or crash-reportin
 | Room (`room-runtime`, `room-ktx`, compiler via KSP, `room-testing`) + `androidx.room` Gradle plugin | Local storage with exported schemas for migration tests (ADR 0003) | r5w |
 | `kotlinx-coroutines-core` (+ `-test`) | `Flow` in domain repository interfaces; `setMain` in ViewModel tests | r5w |
 | `androidx.test:rules` | `GrantPermissionRule` for `POST_NOTIFICATIONS` in instrumented tests (test only) | gcc |
+
+## Supply-chain verification
+- `gradle/verification-metadata.xml` pins a SHA-256 for every resolved artifact (including build plugins). A tampered or swapped dependency fails the build. Regenerate after any dependency change: `./gradlew --write-verification-metadata sha256 check assembleDebug assembleRelease assembleDebugAndroidTest`, then review the diff before committing.
+- `distributionSha256Sum` in `gradle-wrapper.properties` pins the Gradle distribution.
+- Limit: hashes are trust-on-first-use. They stop later tampering, not a malicious artifact present when first recorded.
