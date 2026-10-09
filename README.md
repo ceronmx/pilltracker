@@ -11,7 +11,6 @@ MVP: setup, daily reminder with a Taken action, one-tap logging with the month g
 - [Spec](docs/spec.md): features and acceptance criteria
 - [CLAUDE.md](CLAUDE.md): rules the coding agent follows
 - [ADRs](docs/adr/): architecture decisions
-- [Agent workflow](docs/agent-workflow.md): how agents were used, and where they were wrong
 - [Open questions](docs/open-questions.md)
 
 ## Architecture (planned)
