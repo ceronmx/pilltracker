@@ -65,3 +65,6 @@ If it differs, do not install it. Android will also refuse to update an installe
 
 ## Supply chain
 Every Gradle dependency and the Gradle distribution itself are pinned by SHA-256 (`gradle/verification-metadata.xml`, `gradle-wrapper.properties`), so a tampered artifact fails the build. See [dependencies](docs/dependencies.md).
+
+## License
+GPL-3.0-or-later. See [LICENSE](LICENSE). Anyone who distributes this app or a modified version must also release the source code under the same license.
