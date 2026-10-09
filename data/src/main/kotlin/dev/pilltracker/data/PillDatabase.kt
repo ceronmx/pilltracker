@@ -43,6 +43,9 @@ interface IntakeDao {
     /** IGNORE keeps the first instant when the same day is logged twice. */
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(intake: IntakeEntity)
+
+    @Query("DELETE FROM intake WHERE pillDayEpochDay = :day")
+    suspend fun delete(day: Long)
 }
 
 /** Single row (id = 0) holding the setup answers. */
@@ -101,6 +104,8 @@ class RoomIntakeRepository(private val dao: IntakeDao) : IntakeRepository {
         day: LocalDate,
         at: Instant,
     ) = dao.insert(IntakeEntity(day.toEpochDay(), at.toEpochMilli()))
+
+    override suspend fun markNotTaken(day: LocalDate) = dao.delete(day.toEpochDay())
 }
 
 /** Stored codes are fixed: renaming PackType must not break saved settings (installed 0.1 used these). */

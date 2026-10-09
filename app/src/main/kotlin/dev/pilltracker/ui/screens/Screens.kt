@@ -150,6 +150,11 @@ fun HomeScreen(
                 }
             } else {
                 TakenButton(state.taken, { onEvent(HomeUiEvent.Taken) })
+                if (state.taken) {
+                    TextButton({ onEvent(HomeUiEvent.NotTaken) }, Modifier.align(Alignment.CenterHorizontally)) {
+                        Text(stringResource(R.string.mark_not_taken))
+                    }
+                }
             }
             MonthGrid(
                 state.month,

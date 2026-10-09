@@ -123,6 +123,12 @@ class ScreensTest {
     @Test fun homeTakenEs() {
         home("es", taken = true)
         rule.onNodeWithText("Registrado hoy").assertExists()
+        rule.onNodeWithText("Marcar como no tomada").assertExists()
+    }
+
+    @Test fun homeUndoOnlyOnceTakenEn() {
+        home("en", taken = false)
+        rule.onNodeWithText("Mark as not taken").assertDoesNotExist()
     }
 
     /** Taken button and month grid on the same screen (u9o). */

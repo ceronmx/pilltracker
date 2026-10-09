@@ -129,6 +129,9 @@ data class HomeUiState(
 sealed interface HomeUiEvent {
     data object Taken : HomeUiEvent
 
+    /** Undo a wrong Taken tap for the shown day (AC3.5). */
+    data object NotTaken : HomeUiEvent
+
     /** App came to the foreground: re-read "today" (midnight passed, or the zone changed), back to its month. */
     data object Resumed : HomeUiEvent
 
@@ -178,6 +181,8 @@ class HomeViewModel
                     today.value = LocalDate.now(clock)
                     viewModelScope.launch { intakes.markTaken(today.value, clock.instant()) }
                 }
+                // The day on screen, not a re-read clock: undo what she sees as "logged for today".
+                HomeUiEvent.NotTaken -> viewModelScope.launch { intakes.markNotTaken(today.value) }
             }
         }
 

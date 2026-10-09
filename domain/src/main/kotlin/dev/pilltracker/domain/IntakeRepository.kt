@@ -16,4 +16,7 @@ interface IntakeRepository {
         day: LocalDate,
         at: Instant,
     )
+
+    /** Removes the record for [day], undoing a wrong tap (AC3.5); no-op if none. */
+    suspend fun markNotTaken(day: LocalDate)
 }

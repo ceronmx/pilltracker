@@ -27,6 +27,7 @@
     <string name="taken_today">Logged for today</string>
     <string name="break_day">Break day</string>
     <string name="placebo_day">Placebo day</string>
+    <string name="mark_not_taken">Mark as not taken</string>
 
     <!-- Month grid -->
     <string name="previous_month">Previous month</string>

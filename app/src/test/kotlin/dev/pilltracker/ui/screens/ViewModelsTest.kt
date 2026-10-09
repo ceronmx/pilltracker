@@ -44,6 +44,8 @@ class InMemoryIntakeRepository : IntakeRepository {
         day: LocalDate,
         at: Instant,
     ) = intakes.update { if (day in it) it else it + (day to at) }
+
+    override suspend fun markNotTaken(day: LocalDate) = intakes.update { it - day }
 }
 
 class InMemorySettingsRepository(initial: Settings? = null) : SettingsRepository {
@@ -200,6 +202,17 @@ class ViewModelsTest {
         assertTrue(vm.state.value.taken)
         assertEquals(first, repo.intakes.value)
         assertEquals(mapOf(LocalDate.of(2026, 10, 6) to first.values.single()), repo.intakes.value)
+    }
+
+    @Test
+    fun notTakenUndoesTodayOnly() {
+        repo.intakes.value = mapOf(oct6.minusDays(1) to Instant.EPOCH)
+        val vm = HomeViewModel(clockAt(oct6, LocalTime.of(8, 0)), MONDAY, repo, settings)
+        vm.onEvent(HomeUiEvent.Taken)
+        assertTrue(vm.state.value.taken)
+        vm.onEvent(HomeUiEvent.NotTaken)
+        assertFalse(vm.state.value.taken)
+        assertEquals(setOf(oct6.minusDays(1)), repo.intakes.value.keys)
     }
 
     @Test

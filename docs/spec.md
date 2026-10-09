@@ -19,6 +19,7 @@ A 100% local Android app: remind one person to take a daily pill, log it in one 
 - AC3.2 A record stores the pill day (`LocalDate` in the zone at the time) and the instant taken. The date is never re-derived from the instant.
 - AC3.3 Placebo days (21 + 7, days 22-28) work like active days; Home labels them neutrally as placebo.
 - AC3.4 Break days (21 pills, days 22-28) show "Break day" instead of the Taken button.
+- AC3.5 Once today is logged, a **Mark as not taken** text button under it removes today's record in one tap (undo for a wrong tap, from Home or the notification). No confirmation: Taken logs it again in one tap. Past days stay as recorded.
 
 ## 4. History (on Home)
 - AC4.1 Month grid on Home, below today's Taken button, shows taken / not-taken / break per day (placebo days marked), never "not taken" for a break day, with previous/next month navigation; returning to the app shows the current month.

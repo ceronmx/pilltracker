@@ -40,6 +40,15 @@ class IntakeRepositoryTest {
             assertEquals(setOf(oct6), repo.takenDays(oct6.minusDays(1), oct6).first())
         }
 
+    @Test fun markNotTakenRemovesOnlyThatDay() =
+        runTest {
+            repo.markTaken(oct6, Instant.EPOCH)
+            repo.markTaken(oct6.minusDays(1), Instant.EPOCH)
+            repo.markNotTaken(oct6)
+            repo.markNotTaken(oct6) // no record left: no-op
+            assertEquals(setOf(oct6.minusDays(1)), repo.takenDays(oct6.minusDays(1), oct6).first())
+        }
+
     @Test fun takenDaysIsInclusiveRange() =
         runTest {
             listOf(1L, 15L, 31L).forEach { repo.markTaken(LocalDate.of(2026, 10, it.toInt()), Instant.EPOCH) }
