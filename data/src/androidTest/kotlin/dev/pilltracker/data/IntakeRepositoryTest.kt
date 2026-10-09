@@ -49,6 +49,14 @@ class IntakeRepositoryTest {
             assertEquals(setOf(oct6.minusDays(1)), repo.takenDays(oct6.minusDays(1), oct6).first())
         }
 
+    @Test fun lastTakenDayIgnoresLaterDays() =
+        runTest {
+            assertEquals(null, repo.lastTakenDay(oct6).first())
+            repo.markTaken(oct6.minusDays(3), Instant.EPOCH)
+            repo.markTaken(oct6.plusDays(1), Instant.EPOCH)
+            assertEquals(oct6.minusDays(3), repo.lastTakenDay(oct6).first())
+        }
+
     @Test fun takenDaysIsInclusiveRange() =
         runTest {
             listOf(1L, 15L, 31L).forEach { repo.markTaken(LocalDate.of(2026, 10, it.toInt()), Instant.EPOCH) }

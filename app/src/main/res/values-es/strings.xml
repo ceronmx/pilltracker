@@ -27,6 +27,11 @@
     <string name="break_day">Día de descanso</string>
     <string name="placebo_day">Día de placebo</string>
     <string name="mark_not_taken">Marcar como no tomada</string>
+    <plurals name="days_since_last_pill">
+        <item quantity="one">Última pastilla registrada hace %1$d día</item>
+        <item quantity="many">Última pastilla registrada hace %1$d días</item>
+        <item quantity="other">Última pastilla registrada hace %1$d días</item>
+    </plurals>
 
     <!-- Month grid -->
     <string name="previous_month">Mes anterior</string>

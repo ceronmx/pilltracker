@@ -42,3 +42,21 @@ fun dayKind(
         else -> DayKind.BREAK
     }
 }
+
+/**
+ * Calendar days from [lastTaken] to [today] if a pill day (not a break day) in between went unlogged (AC4.3);
+ * null when nothing was ever logged or nothing was missed.
+ */
+fun daysSinceLastPill(
+    type: PackType,
+    start: LocalDate,
+    lastTaken: LocalDate?,
+    today: LocalDate,
+): Int? {
+    if (lastTaken == null) return null
+    val missed =
+        generateSequence(lastTaken.plusDays(1)) { it.plusDays(1) }
+            .takeWhile { it < today }
+            .any { dayKind(type, start, it) != DayKind.BREAK }
+    return if (missed) DAYS.between(lastTaken, today).toInt() else null
+}

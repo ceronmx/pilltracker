@@ -131,6 +131,17 @@ class ScreensTest {
         rule.onNodeWithText("Mark as not taken").assertDoesNotExist()
     }
 
+    @Test fun homeMissedNoticeEn() {
+        val missed = sampleHome.copy(daysSinceLastPill = 3)
+        rule.setContentIn("en") { PillTrackerTheme { HomeScreen(missed, {}, {}) } }
+        rule.onNodeWithText("Last pill logged 3 days ago").assertExists()
+    }
+
+    @Test fun homeMissedNoticeEs() {
+        rule.setContentIn("es") { PillTrackerTheme { HomeScreen(sampleHome.copy(daysSinceLastPill = 3), {}, {}) } }
+        rule.onNodeWithText("Última pastilla registrada hace 3 días").assertExists()
+    }
+
     /** Taken button and month grid on the same screen (u9o). */
     @Test fun homeShowsTakenAndMonthEn() {
         home("en", taken = false)

@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -31,6 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import dev.pilltracker.R
@@ -139,6 +141,15 @@ fun HomeScreen(
             verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {
             if (state.notificationsOff) PermissionNotice(onFixNotifications)
+            state.daysSinceLastPill?.let { days ->
+                Card(Modifier.fillMaxWidth()) {
+                    Text(
+                        pluralStringResource(R.plurals.days_since_last_pill, days, days),
+                        Modifier.padding(20.dp),
+                        style = MaterialTheme.typography.bodyLarge,
+                    )
+                }
+            }
             if (state.dayKind == DayKind.PLACEBO) {
                 Text(stringResource(R.string.placebo_day), color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
@@ -275,3 +286,7 @@ private fun HomeBreakPreview() =
     PillTrackerTheme {
         HomeScreen(sampleHome.copy(dayKind = DayKind.BREAK), {}, {})
     }
+
+@PillPreviews
+@Composable
+private fun HomeMissedPreview() = PillTrackerTheme { HomeScreen(sampleHome.copy(daysSinceLastPill = 3), {}, {}) }

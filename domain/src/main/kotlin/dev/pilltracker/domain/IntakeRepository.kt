@@ -19,4 +19,7 @@ interface IntakeRepository {
 
     /** Removes the record for [day], undoing a wrong tap (AC3.5); no-op if none. */
     suspend fun markNotTaken(day: LocalDate)
+
+    /** Latest logged pill day on or before [day], or null if none (AC4.3). */
+    fun lastTakenDay(day: LocalDate): Flow<LocalDate?>
 }

@@ -24,6 +24,7 @@ A 100% local Android app: remind one person to take a daily pill, log it in one 
 ## 4. History (on Home)
 - AC4.1 Month grid on Home, below today's Taken button, shows taken / not-taken / break per day (placebo days marked), never "not taken" for a break day, with previous/next month navigation; returning to the app shows the current month.
 - AC4.2 Records only; no advice about missed pills.
+- AC4.3 If any pill day (active or placebo, not break) between the last logged pill and today is not logged, Home shows a neutral notice above the Taken button: "Last pill logged %d days ago" (calendar days, plurals). No notice when nothing was ever logged, when only break days lie in between, or when today or yesterday is the last logged day. No advice (AC4.2).
 
 ## 5. Localization (en, es)
 - AC5.1 Every user-visible string (UI, notifications, permission rationales, errors, accessibility labels) is in `values/strings.xml` (en, default) and `values-es/strings.xml`. No hardcoded text.

@@ -46,6 +46,9 @@ interface IntakeDao {
 
     @Query("DELETE FROM intake WHERE pillDayEpochDay = :day")
     suspend fun delete(day: Long)
+
+    @Query("SELECT MAX(pillDayEpochDay) FROM intake WHERE pillDayEpochDay <= :day")
+    fun lastTakenDay(day: Long): Flow<Long?>
 }
 
 /** Single row (id = 0) holding the setup answers. */
@@ -106,6 +109,9 @@ class RoomIntakeRepository(private val dao: IntakeDao) : IntakeRepository {
     ) = dao.insert(IntakeEntity(day.toEpochDay(), at.toEpochMilli()))
 
     override suspend fun markNotTaken(day: LocalDate) = dao.delete(day.toEpochDay())
+
+    override fun lastTakenDay(day: LocalDate): Flow<LocalDate?> =
+        dao.lastTakenDay(day.toEpochDay()).map { it?.let(LocalDate::ofEpochDay) }
 }
 
 /** Stored codes are fixed: renaming PackType must not break saved settings (installed 0.1 used these). */

@@ -28,6 +28,11 @@
     <string name="break_day">Break day</string>
     <string name="placebo_day">Placebo day</string>
     <string name="mark_not_taken">Mark as not taken</string>
+    <!-- Records only, never advice (AC4.2). -->
+    <plurals name="days_since_last_pill">
+        <item quantity="one">Last pill logged %1$d day ago</item>
+        <item quantity="other">Last pill logged %1$d days ago</item>
+    </plurals>
 
     <!-- Month grid -->
     <string name="previous_month">Previous month</string>

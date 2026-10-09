@@ -13,6 +13,7 @@ import dev.pilltracker.domain.rules.PACK_DAYS
 import dev.pilltracker.domain.rules.PackType
 import dev.pilltracker.domain.rules.dayKind
 import dev.pilltracker.domain.rules.dayOfPack
+import dev.pilltracker.domain.rules.daysSinceLastPill
 import dev.pilltracker.domain.rules.monthLayout
 import dev.pilltracker.domain.rules.packStart
 import dev.pilltracker.ui.components.DayCell
@@ -124,6 +125,8 @@ data class HomeUiState(
     val weeks: List<List<DayCell?>> = emptyList(),
     /** Notifications are switched off in system settings: reminders can't show (x6z). */
     val notificationsOff: Boolean = false,
+    /** Days since the last logged pill, set only when a pill day in between went unlogged (AC4.3). */
+    val daysSinceLastPill: Int? = null,
 )
 
 sealed interface HomeUiEvent {
@@ -163,7 +166,11 @@ class HomeViewModel
                     // One query covers the shown month and today, which may lie outside it.
                     val from = minOf(m.atDay(1), day)
                     val to = maxOf(m.atEndOfMonth(), day)
-                    combine(intakes.takenDays(from, to), settings.settings) { taken, s -> stateFor(day, m, taken, s) }
+                    val last = intakes.lastTakenDay(day)
+                    combine(intakes.takenDays(from, to), last, settings.settings) { taken, lastDay, s ->
+                        val sinceLast = s?.let { daysSinceLastPill(it.packType, it.packStart, lastDay, day) }
+                        stateFor(day, m, taken, s).copy(daysSinceLastPill = sinceLast)
+                    }
                 }.combine(notificationsOff) { s, off -> s.copy(notificationsOff = off) }
                 .stateIn(viewModelScope, SharingStarted.Eagerly, stateFor(today.value, month.value, emptySet(), null))
 

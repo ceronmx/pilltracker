@@ -46,6 +46,9 @@ class InMemoryIntakeRepository : IntakeRepository {
     ) = intakes.update { if (day in it) it else it + (day to at) }
 
     override suspend fun markNotTaken(day: LocalDate) = intakes.update { it - day }
+
+    override fun lastTakenDay(day: LocalDate): Flow<LocalDate?> =
+        intakes.map { all -> all.keys.filter { it <= day }.maxOrNull() }
 }
 
 class InMemorySettingsRepository(initial: Settings? = null) : SettingsRepository {
@@ -213,6 +216,22 @@ class ViewModelsTest {
         vm.onEvent(HomeUiEvent.NotTaken)
         assertFalse(vm.state.value.taken)
         assertEquals(setOf(oct6.minusDays(1)), repo.intakes.value.keys)
+    }
+
+    @Test
+    fun homeCountsDaysSinceLastPillWhenDaysWereMissed() {
+        settings.settings.value = Settings(PackType.WITH_PLACEBO, LocalDate.of(2026, 10, 1), LocalTime.NOON)
+        val clock = clockAt(oct6, LocalTime.of(23, 59))
+        val vm = HomeViewModel(clock, MONDAY, repo, settings)
+        assertEquals(null, vm.state.value.daysSinceLastPill) // nothing logged yet
+        repo.intakes.value = mapOf(oct6.minusDays(1) to Instant.EPOCH)
+        assertEquals(null, vm.state.value.daysSinceLastPill)
+
+        clock.instant = clock.instant.plusSeconds(60) // 00:00 Oct 7: Oct 6 now missed
+        vm.onEvent(HomeUiEvent.Resumed)
+        assertEquals(2, vm.state.value.daysSinceLastPill)
+        vm.onEvent(HomeUiEvent.Taken)
+        assertEquals(null, vm.state.value.daysSinceLastPill)
     }
 
     @Test

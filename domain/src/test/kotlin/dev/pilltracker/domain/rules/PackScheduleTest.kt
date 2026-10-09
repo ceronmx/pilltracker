@@ -77,4 +77,30 @@ class PackScheduleTest {
         val nyDate = instant.atZone(ZoneId.of("America/New_York")).toLocalDate()
         assertEquals(ACTIVE, dayKind(WITH_BREAK, start, nyDate))
     }
+
+    @Test
+    fun noMissedDaysWhenNothingLoggedOrNoGap() {
+        assertEquals(null, daysSinceLastPill(WITH_PLACEBO, start, lastTaken = null, today = day(5)))
+        assertEquals(null, daysSinceLastPill(WITH_PLACEBO, start, lastTaken = day(5), today = day(5)))
+        // 23:59 to 00:00: yesterday logged, today not yet: nothing missed.
+        assertEquals(null, daysSinceLastPill(WITH_PLACEBO, start, lastTaken = day(4), today = day(5)))
+        // Logged a later pill day (zone travel westwards): not a gap.
+        assertEquals(null, daysSinceLastPill(WITH_PLACEBO, start, lastTaken = day(6), today = day(5)))
+    }
+
+    @Test
+    fun missedActiveOrPlaceboDayCountsCalendarDaysSinceLastPill() {
+        assertEquals(2, daysSinceLastPill(WITH_PLACEBO, start, lastTaken = day(3), today = day(5)))
+        assertEquals(3, daysSinceLastPill(WITH_PLACEBO, start, lastTaken = day(21), today = day(24))) // placebo gap
+        // The gap spans the 2026-10-25 DST fall-back day; still calendar days.
+        assertEquals(4, daysSinceLastPill(WITH_PLACEBO, start, lastTaken = day(23), today = day(27)))
+    }
+
+    @Test
+    fun breakDaysAreNeverMissed() {
+        assertEquals(null, daysSinceLastPill(WITH_BREAK, start, lastTaken = day(21), today = day(28)))
+        assertEquals(null, daysSinceLastPill(WITH_BREAK, start, lastTaken = day(21), today = day(29))) // new pack
+        // Pill 1 of the new pack missed: counts back to pill 21.
+        assertEquals(9, daysSinceLastPill(WITH_BREAK, start, lastTaken = day(21), today = day(30)))
+    }
 }
