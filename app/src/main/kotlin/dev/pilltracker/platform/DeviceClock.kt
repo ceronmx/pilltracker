@@ -4,6 +4,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import dev.pilltracker.domain.Notifier
 import dev.pilltracker.domain.ReminderScheduler
 import java.time.Clock
 import java.time.DayOfWeek
@@ -30,6 +31,8 @@ object PlatformModule {
     @Provides fun clock(): Clock = DeviceClock
 
     @Provides fun reminders(impl: AlarmReminderScheduler): ReminderScheduler = impl
+
+    @Provides fun notifier(impl: NotificationNotifier): Notifier = impl
 
     /** Read when a screen is created, so a new system language applies on the next visit. */
     @Provides fun firstDayOfWeek(): DayOfWeek = WeekFields.of(Locale.getDefault()).firstDayOfWeek

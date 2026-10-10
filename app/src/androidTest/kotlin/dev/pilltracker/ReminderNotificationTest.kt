@@ -5,7 +5,7 @@ import android.app.Notification
 import android.app.NotificationManager
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.GrantPermissionRule
-import dev.pilltracker.platform.showReminder
+import dev.pilltracker.platform.NotificationNotifier
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -27,7 +27,7 @@ class ReminderNotificationTest {
     }
 
     @Test fun neutralSecretNotificationWithTakenActionThatDismissesIt() {
-        showReminder(context)
+        NotificationNotifier(context).showReminder()
         waitUntil { active().isNotEmpty() }
         val n = active().single()
         assertEquals(context.getString(R.string.notification_title), n.extras.getString(Notification.EXTRA_TITLE))
