@@ -26,16 +26,20 @@ class NotificationNotifier
     ) : Notifier {
         private val manager get() = context.getSystemService(NotificationManager::class.java)
 
-        override fun showReminder() {
-            if (!manager.areNotificationsEnabled()) return
-            val channel =
+        /** Once per process start (PillTrackerApp), not per reminder; also refreshes the localized name. */
+        fun createChannel() {
+            manager.deleteNotificationChannel(OLD_CHANNEL_ID)
+            manager.createNotificationChannel(
                 NotificationChannel(
                     CHANNEL_ID,
                     context.getString(R.string.notification_channel_name),
                     NotificationManager.IMPORTANCE_HIGH,
-                ).apply { lockscreenVisibility = Notification.VISIBILITY_SECRET }
-            manager.deleteNotificationChannel(OLD_CHANNEL_ID)
-            manager.createNotificationChannel(channel)
+                ).apply { lockscreenVisibility = Notification.VISIBILITY_SECRET },
+            )
+        }
+
+        override fun showReminder() {
+            if (!manager.areNotificationsEnabled()) return
             val open =
                 PendingIntent.getActivity(
                     context,
