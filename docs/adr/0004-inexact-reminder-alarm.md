@@ -21,3 +21,6 @@ Exact alarms need `SCHEDULE_EXACT_ALARM`, which is off by default on Android 14+
 |---|---|---|
 | `setAndAllowWhileIdle` | window=+1h | fires (allow-while-idle) |
 | `setWindow(10 min)` | window=+10m | device_idle=+59m (next maintenance window) |
+
+## Measurements (2026-10-09, same emulator): zone change with the app running
+`cmd alarm set-timezone` while the app process stayed alive rescheduled the 09:00 alarm to 09:00 in each new zone (Mexico City -> Tokyo -> Los Angeles). No change to the decision. API 26-30 and OEM battery managers are still unmeasured (bead vix).
