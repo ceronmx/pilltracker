@@ -1,6 +1,6 @@
 # ADR 0004: Inexact reminder alarm, notification permission only
 
-- Status: Accepted
+- Status: Accepted; superseded for the 5-minute repeats only by [ADR 0005](0005-repeat-reminders.md)
 - Date: 2026-10-06
 
 ## Context

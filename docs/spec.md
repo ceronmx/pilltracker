@@ -9,8 +9,8 @@ A 100% local Android app: remind one person to take a daily pill, log it in one 
 - AC1.4 Answers are saved; later launches open Home. The pack repeats every 28 days from the day of pill 1.
 
 ## 2. Reminder
-- AC2.1 A notification fires daily within 10 minutes after the chosen time while the phone is in use; on an idle phone it may wait until the phone wakes (inexact alarm, ADR 0004), except on break days (21 pills, days 22-28) (local zone; re-scheduled after reboot, time-zone change, and DST change).
-- AC2.2 Notification text is neutral ("Time for your daily check-in"), visibility `SECRET`.
+- AC2.1 A notification fires daily within 10 minutes after the chosen time while the phone is in use; on an idle phone it may wait until the phone wakes (inexact alarm, ADR 0004), except on break days (21 pills, days 22-28) (local zone; re-scheduled after reboot, time-zone change, and DST change). While today is not logged, it repeats every 5 minutes, at most 12 times (about an hour); on an idle phone repeats may slip by up to about an hour (ADR 0005). Repeats stop once today is logged (notification or Home), on break days, and at midnight (a new pill day); **Mark as not taken** does not restart them. Repeats survive reboot, app update and time-zone change.
+- AC2.2 Notification title is a playful prefix plus neutral text ("Squeak! Squeak! Time for your daily check-in"), visibility `SECRET`. It plays a short guinea pig sound on every notification, repeats included (ADR 0005). Once at least one full hour has passed since today's reminder time, the text adds "%d hours since check-in time" (plurals, whole hours counted from the reminder time), refreshed on each repeat.
 - AC2.3 The notification has a **Taken** action: one tap logs today's pill, dismisses the notification, no app launch.
 - AC2.4 Whenever notifications are not allowed (switched off after setup, or never allowed), Home shows the same neutral notice as setup (AC1.3) above the Taken button; its retry opens the app's notification settings. It disappears once notifications are allowed again. Logging keeps working either way.
 
@@ -20,6 +20,7 @@ A 100% local Android app: remind one person to take a daily pill, log it in one 
 - AC3.3 Placebo days (21 + 7, days 22-28) work like active days; Home labels them neutrally as placebo.
 - AC3.4 Break days (21 pills, days 22-28) show "Break day" instead of the Taken button.
 - AC3.5 Once today is logged, a **Mark as not taken** text button under it removes today's record in one tap (undo for a wrong tap, from Home or the notification). No confirmation: Taken logs it again in one tap. Past days stay as recorded.
+- AC3.6 While today (active or placebo) is not logged and at least one full hour has passed since today's reminder time, Home shows the same "%d hours since check-in time" text as the notification (AC2.2) above the Taken button. Not shown before the reminder time, on break days, or once logged. No advice (AC4.2).
 
 ## 4. History (on Home)
 - AC4.1 Month grid on Home, below today's Taken button, shows taken / not-taken / break per day (placebo days marked), never "not taken" for a break day, with previous/next month navigation; returning to the app shows the current month.
@@ -30,7 +31,7 @@ A 100% local Android app: remind one person to take a daily pill, log it in one 
 - AC5.1 Every user-visible string (UI, notifications, permission rationales, errors, accessibility labels) is in `values/strings.xml` (en, default) and `values-es/strings.xml`. No hardcoded text.
 - AC5.2 Follows the system language; no in-app picker; falls back to English.
 - AC5.3 Plurals and format args, never concatenation; dates/times use locale-aware `java.time` formatters.
-- AC5.4 Neutral notification wording in both languages ("Time for your daily check-in" / "Es hora de tu registro diario").
+- AC5.4 Neutral notification wording in both languages after the playful prefix ("Squeak! Squeak! Time for your daily check-in" / "¡Cuy! ¡Cuy! Es hora de tu registro diario").
 - AC5.5 Lint `MissingTranslation` is an error; UI tests cover both locales for both screens (setup, home).
 
 ## 6. Privacy
