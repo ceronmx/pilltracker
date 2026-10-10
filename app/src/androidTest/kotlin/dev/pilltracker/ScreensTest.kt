@@ -142,6 +142,16 @@ class ScreensTest {
         rule.onNodeWithText("Última pastilla registrada hace 3 días").assertExists()
     }
 
+    @Test fun homeHoursLateEn() {
+        rule.setContentIn("en") { PillTrackerTheme { HomeScreen(sampleHome.copy(hoursLate = 3), {}, {}) } }
+        rule.onNodeWithText("3 hours since check-in time").assertExists()
+    }
+
+    @Test fun homeHoursLateEs() {
+        rule.setContentIn("es") { PillTrackerTheme { HomeScreen(sampleHome.copy(hoursLate = 1), {}, {}) } }
+        rule.onNodeWithText("1 hora desde la hora de tu registro").assertExists()
+    }
+
     /** Taken button and month grid on the same screen (u9o). */
     @Test fun homeShowsTakenAndMonthEn() {
         home("en", taken = false)

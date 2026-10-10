@@ -144,6 +144,14 @@ class ReminderUseCasesTest {
     }
 
     @Test
+    fun theNotificationSaysHowLateOnceAnHourHasPassed() {
+        handle(clock("2026-10-06T09:55"), ReminderTrigger.REPEAT)
+        assertEquals(null, notifier.lastHoursLate)
+        handle(clock("2026-10-06T10:00"), ReminderTrigger.REPEAT)
+        assertEquals(1, notifier.lastHoursLate)
+    }
+
+    @Test
     fun aRepeatAfterTheHourIsSilentAndEndsTheChain() {
         handle(clock("2026-10-06T10:20"), ReminderTrigger.REPEAT)
         assertEquals(0, notifier.shown)

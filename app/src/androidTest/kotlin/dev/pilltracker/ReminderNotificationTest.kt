@@ -27,10 +27,12 @@ class ReminderNotificationTest {
     }
 
     @Test fun neutralSecretNotificationWithTakenActionThatDismissesIt() {
-        NotificationNotifier(context).showReminder()
+        NotificationNotifier(context).showReminder(hoursLate = 2)
         waitUntil { active().isNotEmpty() }
         val n = active().single()
         assertEquals(context.getString(R.string.notification_title), n.extras.getString(Notification.EXTRA_TITLE))
+        val late = context.resources.getQuantityString(R.plurals.hours_since_reminder, 2, 2)
+        assertEquals(late, n.extras.getString(Notification.EXTRA_TEXT))
         assertEquals(Notification.VISIBILITY_SECRET, n.visibility)
         // High importance = shown as a pop-up banner, not only in the shade.
         assertEquals(NotificationManager.IMPORTANCE_HIGH, manager.getNotificationChannel(n.channelId).importance)

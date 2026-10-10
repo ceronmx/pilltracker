@@ -27,6 +27,12 @@
     <string name="break_day">Día de descanso</string>
     <string name="placebo_day">Día de placebo</string>
     <string name="mark_not_taken">Marcar como no tomada</string>
+    <plurals name="hours_since_reminder">
+        <item quantity="one">%1$d hora desde la hora de tu registro</item>
+        <item quantity="many">%1$d horas desde la hora de tu registro</item>
+        <item quantity="other">%1$d horas desde la hora de tu registro</item>
+    </plurals>
+
     <plurals name="days_since_last_pill">
         <item quantity="one">Última pastilla registrada hace %1$d día</item>
         <item quantity="many">Última pastilla registrada hace %1$d días</item>

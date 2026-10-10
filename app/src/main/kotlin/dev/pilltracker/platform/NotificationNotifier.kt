@@ -38,7 +38,7 @@ class NotificationNotifier
             )
         }
 
-        override fun showReminder() {
+        override fun showReminder(hoursLate: Int?) {
             if (!manager.areNotificationsEnabled()) return
             val open =
                 PendingIntent.getActivity(
@@ -60,6 +60,9 @@ class NotificationNotifier
                     .setSmallIcon(icon)
                     .setColor(context.getColor(R.color.brand))
                     .setContentTitle(context.getString(R.string.notification_title))
+                    .setContentText(
+                        hoursLate?.let { context.resources.getQuantityString(R.plurals.hours_since_reminder, it, it) },
+                    )
                     .setVisibility(Notification.VISIBILITY_SECRET)
                     .setContentIntent(open)
                     .setAutoCancel(true)

@@ -1,5 +1,6 @@
 package dev.pilltracker.domain
 
+import dev.pilltracker.domain.rules.hoursLate
 import dev.pilltracker.domain.rules.inRepeatWindow
 import dev.pilltracker.domain.rules.nextRepeatAt
 import dev.pilltracker.domain.rules.shouldRemind
@@ -43,7 +44,11 @@ class HandleReminderUseCase(
                     ReminderTrigger.REPEAT -> inRepeatWindow(s.reminderTime, now, clock.zone)
                     ReminderTrigger.SYSTEM -> false
                 }
-            if (notify && shouldRemind(s, today, taken)) notifier.showReminder()
+            if (notify && shouldRemind(s, today, taken)) {
+                notifier.showReminder(
+                    hoursLate(s.reminderTime, now, clock.zone),
+                )
+            }
             // A SYSTEM trigger inside the hour restarts the chain a reboot or update dropped.
             nextRepeatAt(s, now, clock.zone, taken)?.let(scheduler::scheduleRepeat)
         } finally {

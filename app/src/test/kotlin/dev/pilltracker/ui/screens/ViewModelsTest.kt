@@ -189,6 +189,25 @@ class ViewModelsTest {
     }
 
     @Test
+    fun homeShowsHoursLateWhileTodayIsUnlogged() {
+        settings.settings.value = Settings(PackType.WITH_BREAK, LocalDate.of(2026, 10, 1), LocalTime.of(9, 0))
+        val clock = clockAt(oct6, LocalTime.of(9, 59))
+        val vm = home(clock)
+        assertEquals(null, vm.state.value.hoursLate) // under an hour
+        clock.instant = clock.instant.plusSeconds(3 * 3600 + 60) // 13:00
+        vm.onEvent(HomeUiEvent.Resumed)
+        assertEquals(4, vm.state.value.hoursLate)
+        vm.onEvent(HomeUiEvent.Taken)
+        assertEquals(null, vm.state.value.hoursLate)
+    }
+
+    @Test
+    fun noHoursLateOnABreakDay() {
+        settings.settings.value = Settings(PackType.WITH_BREAK, LocalDate.of(2026, 10, 1), LocalTime.of(9, 0))
+        assertEquals(null, home(clockAt(LocalDate.of(2026, 10, 22), LocalTime.of(15, 0))).state.value.hoursLate)
+    }
+
+    @Test
     fun homeCountsDaysSinceLastPillWhenDaysWereMissed() {
         settings.settings.value = Settings(PackType.WITH_PLACEBO, LocalDate.of(2026, 10, 1), LocalTime.NOON)
         val clock = clockAt(oct6, LocalTime.of(23, 59))

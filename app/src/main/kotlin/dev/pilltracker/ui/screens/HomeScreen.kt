@@ -67,6 +67,7 @@ fun HomeScreen(
                     )
                 }
             }
+            state.hoursLate?.let { Text(pluralStringResource(R.plurals.hours_since_reminder, it, it)) }
             if (state.dayKind == DayKind.PLACEBO) {
                 Text(stringResource(R.string.placebo_day), color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
@@ -136,3 +137,7 @@ private fun HomeBreakPreview() =
 @PillPreviews
 @Composable
 private fun HomeMissedPreview() = PillTrackerTheme { HomeScreen(sampleHome.copy(daysSinceLastPill = 3), {}, {}) }
+
+@PillPreviews
+@Composable
+private fun HomeLatePreview() = PillTrackerTheme { HomeScreen(sampleHome.copy(hoursLate = 3), {}, {}) }

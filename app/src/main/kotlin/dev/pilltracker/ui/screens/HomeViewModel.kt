@@ -11,8 +11,10 @@ import dev.pilltracker.domain.SettingsRepository
 import dev.pilltracker.domain.rules.DayKind
 import dev.pilltracker.domain.rules.dayKind
 import dev.pilltracker.domain.rules.daysSinceLastPill
+import dev.pilltracker.domain.rules.hoursLate
 import dev.pilltracker.domain.rules.monthLayout
 import dev.pilltracker.domain.rules.packStart
+import dev.pilltracker.domain.rules.shouldRemind
 import dev.pilltracker.ui.components.DayCell
 import dev.pilltracker.ui.components.DayStatus
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -48,6 +50,8 @@ data class HomeUiState(
     val notificationsOff: Boolean = false,
     /** Days since the last logged pill, set only when a pill day in between went unlogged (AC4.3). */
     val daysSinceLastPill: Int? = null,
+    /** Whole hours since today's reminder time while today is unlogged, from the first full hour (AC3.6). */
+    val hoursLate: Int? = null,
 )
 
 sealed interface HomeUiEvent {
@@ -83,8 +87,11 @@ class HomeViewModel
         private val month = MutableStateFlow(YearMonth.from(today.value))
         private val notificationsOff = MutableStateFlow(false)
 
+        /** Bumped on resume so hours late refresh within the same day. */
+        private val resumedAt = MutableStateFlow(clock.instant())
+
         val state: StateFlow<HomeUiState> =
-            combine(today, month, ::Pair)
+            combine(today, month, resumedAt) { day, m, _ -> day to m }
                 .flatMapLatest { (day, m) ->
                     // One query covers the shown month and today, which may lie outside it.
                     val from = minOf(m.atDay(1), day)
@@ -92,7 +99,10 @@ class HomeViewModel
                     val last = intakes.lastTakenDay(day)
                     combine(intakes.takenDays(from, to), last, settings.settings) { taken, lastDay, s ->
                         val sinceLast = s?.let { daysSinceLastPill(it.packType, it.packStart, lastDay, day) }
-                        stateFor(day, m, taken, s).copy(daysSinceLastPill = sinceLast)
+                        val late =
+                            s?.takeIf { shouldRemind(it, day, day in taken) }
+                                ?.let { hoursLate(it.reminderTime, clock.instant(), clock.zone) }
+                        stateFor(day, m, taken, s).copy(daysSinceLastPill = sinceLast, hoursLate = late)
                     }
                 }.combine(notificationsOff) { s, off -> s.copy(notificationsOff = off) }
                 .stateIn(viewModelScope, SharingStarted.Eagerly, stateFor(today.value, month.value, emptySet(), null))
@@ -104,6 +114,7 @@ class HomeViewModel
                 is HomeUiEvent.NotificationsChecked -> notificationsOff.value = !event.allowed
                 // Both re-read the clock, so a tap after midnight logs the new pill day.
                 HomeUiEvent.Resumed -> {
+                    resumedAt.value = clock.instant()
                     today.value = LocalDate.now(clock)
                     month.value = YearMonth.from(today.value)
                 }

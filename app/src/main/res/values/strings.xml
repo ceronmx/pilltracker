@@ -29,6 +29,11 @@
     <string name="placebo_day">Placebo day</string>
     <string name="mark_not_taken">Mark as not taken</string>
     <!-- Records only, never advice (AC4.2). -->
+    <plurals name="hours_since_reminder">
+        <item quantity="one">%1$d hour since check-in time</item>
+        <item quantity="other">%1$d hours since check-in time</item>
+    </plurals>
+
     <plurals name="days_since_last_pill">
         <item quantity="one">Last pill logged %1$d day ago</item>
         <item quantity="other">Last pill logged %1$d days ago</item>

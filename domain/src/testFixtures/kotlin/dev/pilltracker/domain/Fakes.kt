@@ -71,10 +71,13 @@ class FakeReminderScheduler : ReminderScheduler {
 class FakeNotifier : Notifier {
     var shown = 0
 
+    var lastHoursLate: Int? = null
+
     var cleared = 0
 
-    override fun showReminder() {
+    override fun showReminder(hoursLate: Int?) {
         shown++
+        lastHoursLate = hoursLate
     }
 
     override fun clearReminder() {
