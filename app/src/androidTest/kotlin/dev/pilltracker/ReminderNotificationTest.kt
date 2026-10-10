@@ -6,6 +6,7 @@ import android.app.NotificationManager
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.GrantPermissionRule
 import dev.pilltracker.platform.NotificationNotifier
+import dev.pilltracker.platform.OLD_CHANNEL_IDS
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -35,7 +36,10 @@ class ReminderNotificationTest {
         assertEquals(late, n.extras.getString(Notification.EXTRA_TEXT))
         assertEquals(Notification.VISIBILITY_SECRET, n.visibility)
         // High importance = shown as a pop-up banner, not only in the shade.
-        assertEquals(NotificationManager.IMPORTANCE_HIGH, manager.getNotificationChannel(n.channelId).importance)
+        val channel = manager.getNotificationChannel(n.channelId)
+        assertEquals(NotificationManager.IMPORTANCE_HIGH, channel.importance)
+        assertEquals("android.resource://${context.packageName}/${R.raw.guinea_pig}", channel.sound.toString())
+        assertTrue(OLD_CHANNEL_IDS.none { manager.getNotificationChannel(it) != null })
         assertEquals(context.getString(R.string.taken), n.actions.single().title)
 
         n.actions.single().actionIntent.send()

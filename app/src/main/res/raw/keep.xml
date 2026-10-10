@@ -1,0 +1,3 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- R8 folds R.raw.guinea_pig into the channel's sound URI string, so the shrinker can't see it is used. -->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:keep="@raw/guinea_pig" />

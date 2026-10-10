@@ -7,16 +7,18 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.graphics.drawable.Icon
+import android.media.AudioAttributes
+import android.net.Uri
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.pilltracker.MainActivity
 import dev.pilltracker.R
 import dev.pilltracker.domain.Notifier
 import javax.inject.Inject
 
-// High importance so the reminder pops up as a banner. Importance can't be raised on an existing channel,
-// hence a new id; the old default-importance "daily" channel is deleted.
-private const val CHANNEL_ID = "daily_reminder"
-private const val OLD_CHANNEL_ID = "daily"
+// High importance so the reminder pops up as a banner, with the guinea pig sound (ADR 0005). A channel's
+// importance and sound can't change once created, hence a new id; earlier channels are deleted.
+internal const val CHANNEL_ID = "daily_reminder_v2"
+internal val OLD_CHANNEL_IDS = listOf("daily", "daily_reminder")
 private const val NOTIFICATION_ID = 1
 
 class NotificationNotifier
@@ -28,13 +30,19 @@ class NotificationNotifier
 
         /** Once per process start (PillTrackerApp), not per reminder; also refreshes the localized name. */
         fun createChannel() {
-            manager.deleteNotificationChannel(OLD_CHANNEL_ID)
+            OLD_CHANNEL_IDS.forEach(manager::deleteNotificationChannel)
+            val sound = Uri.parse("android.resource://${context.packageName}/${R.raw.guinea_pig}")
+            val usage = AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_NOTIFICATION).build()
             manager.createNotificationChannel(
                 NotificationChannel(
                     CHANNEL_ID,
                     context.getString(R.string.notification_channel_name),
                     NotificationManager.IMPORTANCE_HIGH,
-                ).apply { lockscreenVisibility = Notification.VISIBILITY_SECRET },
+                ).apply {
+                    lockscreenVisibility = Notification.VISIBILITY_SECRET
+                    // Every notification, repeats included (ADR 0005).
+                    setSound(sound, usage)
+                },
             )
         }
 
