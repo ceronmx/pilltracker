@@ -30,17 +30,17 @@ class LocaleTest {
 
     @Test fun englishStrings() {
         rule.setContentIn("en") { Text(stringResource(R.string.notification_title)) }
-        rule.onNodeWithText("Time for your daily check-in").assertExists()
+        rule.onNodeWithText("Squeak! Squeak! Time for your daily check-in").assertExists()
     }
 
     @Test fun spanishStrings() {
         rule.setContentIn("es") { Text(stringResource(R.string.notification_title)) }
-        rule.onNodeWithText("Es hora de tu registro diario").assertExists()
+        rule.onNodeWithText("¡Cuy! ¡Cuy! Es hora de tu registro diario").assertExists()
     }
 
     @Test fun unsupportedLanguageFallsBackToEnglish() {
         rule.setContentIn("de") { Text(stringResource(R.string.notification_title)) }
-        rule.onNodeWithText("Time for your daily check-in").assertExists()
+        rule.onNodeWithText("Squeak! Squeak! Time for your daily check-in").assertExists()
     }
 
     @Test fun timeFollows12And24HourSetting() {
