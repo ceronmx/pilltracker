@@ -1,19 +1,15 @@
 package dev.pilltracker.ui.screens
 
+import dev.pilltracker.domain.FakeReminderScheduler
 import dev.pilltracker.domain.GuineaPig
-import dev.pilltracker.domain.IntakeRepository
-import dev.pilltracker.domain.ReminderScheduler
+import dev.pilltracker.domain.InMemoryIntakeRepository
+import dev.pilltracker.domain.InMemorySettingsRepository
 import dev.pilltracker.domain.Settings
-import dev.pilltracker.domain.SettingsRepository
 import dev.pilltracker.domain.rules.DayKind
 import dev.pilltracker.domain.rules.PackType
 import dev.pilltracker.ui.components.DayStatus
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
@@ -31,51 +27,6 @@ import java.time.LocalTime
 import java.time.YearMonth
 import java.time.ZoneId
 import java.time.ZonedDateTime
-
-class InMemoryIntakeRepository : IntakeRepository {
-    val intakes = MutableStateFlow(mapOf<LocalDate, Instant>())
-
-    override fun takenDays(
-        from: LocalDate,
-        to: LocalDate,
-    ): Flow<Set<LocalDate>> = intakes.map { all -> all.keys.filter { it in from..to }.toSet() }
-
-    override suspend fun markTaken(
-        day: LocalDate,
-        at: Instant,
-    ) = intakes.update { if (day in it) it else it + (day to at) }
-
-    override suspend fun markNotTaken(day: LocalDate) = intakes.update { it - day }
-
-    override fun lastTakenDay(day: LocalDate): Flow<LocalDate?> =
-        intakes.map { all -> all.keys.filter { it <= day }.maxOrNull() }
-}
-
-class InMemorySettingsRepository(initial: Settings? = null) : SettingsRepository {
-    override val settings = MutableStateFlow(initial)
-
-    override suspend fun save(settings: Settings) {
-        this.settings.value = settings
-    }
-
-    override suspend fun deleteAll() {
-        settings.value = null
-    }
-}
-
-class FakeReminderScheduler : ReminderScheduler {
-    val scheduled = mutableListOf<LocalTime>()
-
-    var cancelled = false
-
-    override fun scheduleNext(time: LocalTime) {
-        scheduled += time
-    }
-
-    override fun cancel() {
-        cancelled = true
-    }
-}
 
 /** A clock tests can move forward or across zones. */
 class MutableClock(var instant: Instant, var zoneId: ZoneId) : Clock() {

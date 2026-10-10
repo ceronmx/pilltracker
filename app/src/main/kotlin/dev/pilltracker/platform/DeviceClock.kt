@@ -4,8 +4,12 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import dev.pilltracker.domain.HandleReminderUseCase
+import dev.pilltracker.domain.IntakeRepository
+import dev.pilltracker.domain.LogTakenUseCase
 import dev.pilltracker.domain.Notifier
 import dev.pilltracker.domain.ReminderScheduler
+import dev.pilltracker.domain.SettingsRepository
 import java.time.Clock
 import java.time.DayOfWeek
 import java.time.Instant
@@ -33,6 +37,21 @@ object PlatformModule {
     @Provides fun reminders(impl: AlarmReminderScheduler): ReminderScheduler = impl
 
     @Provides fun notifier(impl: NotificationNotifier): Notifier = impl
+
+    // :domain is pure Kotlin without javax.inject, so its use cases are wired here.
+    @Provides fun handleReminder(
+        settings: SettingsRepository,
+        intakes: IntakeRepository,
+        scheduler: ReminderScheduler,
+        notifier: Notifier,
+        clock: Clock,
+    ) = HandleReminderUseCase(settings, intakes, scheduler, notifier, clock)
+
+    @Provides fun logTaken(
+        intakes: IntakeRepository,
+        notifier: Notifier,
+        clock: Clock,
+    ) = LogTakenUseCase(intakes, notifier, clock)
 
     /** Read when a screen is created, so a new system language applies on the next visit. */
     @Provides fun firstDayOfWeek(): DayOfWeek = WeekFields.of(Locale.getDefault()).firstDayOfWeek

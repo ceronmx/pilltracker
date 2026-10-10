@@ -67,6 +67,7 @@ dependencies {
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
 
+    testImplementation(testFixtures(project(":domain")))
     testImplementation(libs.junit5)
     testImplementation(libs.coroutines.test)
 
