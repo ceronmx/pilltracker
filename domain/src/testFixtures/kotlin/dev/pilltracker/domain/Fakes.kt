@@ -44,12 +44,27 @@ class FakeReminderScheduler : ReminderScheduler {
 
     var cancelled = false
 
+    /** The pending repeat, like the platform's single repeat alarm; null once cancelled. */
+    var repeatAt: Instant? = null
+
+    var repeatsCancelled = 0
+
     override fun scheduleNext(time: LocalTime) {
         scheduled += time
     }
 
+    override fun scheduleRepeat(at: Instant) {
+        repeatAt = at
+    }
+
+    override fun cancelRepeat() {
+        repeatAt = null
+        repeatsCancelled++
+    }
+
     override fun cancel() {
         cancelled = true
+        repeatAt = null
     }
 }
 

@@ -50,8 +50,9 @@ object PlatformModule {
     @Provides fun logTaken(
         intakes: IntakeRepository,
         notifier: Notifier,
+        scheduler: ReminderScheduler,
         clock: Clock,
-    ) = LogTakenUseCase(intakes, notifier, clock)
+    ) = LogTakenUseCase(intakes, notifier, scheduler, clock)
 
     /** Read when a screen is created, so a new system language applies on the next visit. */
     @Provides fun firstDayOfWeek(): DayOfWeek = WeekFields.of(Locale.getDefault()).firstDayOfWeek

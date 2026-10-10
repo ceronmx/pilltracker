@@ -1,9 +1,11 @@
 package dev.pilltracker.ui.screens
 
+import dev.pilltracker.domain.FakeNotifier
 import dev.pilltracker.domain.FakeReminderScheduler
 import dev.pilltracker.domain.GuineaPig
 import dev.pilltracker.domain.InMemoryIntakeRepository
 import dev.pilltracker.domain.InMemorySettingsRepository
+import dev.pilltracker.domain.LogTakenUseCase
 import dev.pilltracker.domain.Settings
 import dev.pilltracker.domain.rules.DayKind
 import dev.pilltracker.domain.rules.PackType
@@ -50,6 +52,11 @@ class ViewModelsTest {
         time: LocalTime,
         zone: ZoneId = madrid,
     ) = MutableClock(ZonedDateTime.of(date, time, zone).toInstant(), zone)
+
+    private val notifier = FakeNotifier()
+
+    private fun home(clock: Clock) =
+        HomeViewModel(clock, MONDAY, repo, settings, LogTakenUseCase(repo, notifier, scheduler, clock), scheduler)
 
     @BeforeEach fun mainDispatcher() = Dispatchers.setMain(UnconfinedTestDispatcher())
 
@@ -121,7 +128,7 @@ class ViewModelsTest {
     fun homeShowsDayKindFromPack() {
         settings.settings.value = Settings(PackType.WITH_BREAK, LocalDate.of(2026, 10, 1), LocalTime.NOON)
         val clock = clockAt(LocalDate.of(2026, 10, 21), LocalTime.NOON) // pill 21
-        val vm = HomeViewModel(clock, MONDAY, repo, settings)
+        val vm = home(clock)
         assertEquals(DayKind.ACTIVE, vm.state.value.dayKind)
         clock.instant = clock.instant.plusSeconds(24 * 3600) // day 22
         vm.onEvent(HomeUiEvent.Resumed)
@@ -133,7 +140,7 @@ class ViewModelsTest {
     @Test
     fun calendarMarksBreakAndPlaceboDays() {
         settings.settings.value = Settings(PackType.WITH_BREAK, LocalDate.of(2026, 10, 1), LocalTime.NOON)
-        val vm = HomeViewModel(clockAt(LocalDate.of(2026, 10, 25), LocalTime.NOON), MONDAY, repo, settings)
+        val vm = home(clockAt(LocalDate.of(2026, 10, 25), LocalTime.NOON))
         val cells = vm.state.value.weeks.flatten().filterNotNull()
         assertEquals(DayStatus.NOT_TAKEN, cells.first { it.date.dayOfMonth == 21 }.status)
         assertEquals(DayStatus.BREAK, cells.first { it.date.dayOfMonth == 22 }.status) // past break: never "not taken"
@@ -148,7 +155,7 @@ class ViewModelsTest {
     @Test
     fun takenStoresPillDayAndInstantAndTwiceIsANoOp() {
         val clock = clockAt(LocalDate.of(2026, 10, 6), LocalTime.of(8, 0))
-        val vm = HomeViewModel(clock, MONDAY, repo, settings)
+        val vm = home(clock)
         vm.onEvent(HomeUiEvent.Taken)
         val first = repo.intakes.value
         clock.instant = clock.instant.plusSeconds(60)
@@ -161,7 +168,7 @@ class ViewModelsTest {
     @Test
     fun notTakenUndoesTodayOnly() {
         repo.intakes.value = mapOf(oct6.minusDays(1) to Instant.EPOCH)
-        val vm = HomeViewModel(clockAt(oct6, LocalTime.of(8, 0)), MONDAY, repo, settings)
+        val vm = home(clockAt(oct6, LocalTime.of(8, 0)))
         vm.onEvent(HomeUiEvent.Taken)
         assertTrue(vm.state.value.taken)
         vm.onEvent(HomeUiEvent.NotTaken)
@@ -170,10 +177,22 @@ class ViewModelsTest {
     }
 
     @Test
+    fun takenAndNotTakenOnHomeBothEndTheRepeats() {
+        val vm = home(clockAt(oct6, LocalTime.of(9, 10)))
+        scheduler.repeatAt = Instant.EPOCH
+        vm.onEvent(HomeUiEvent.Taken)
+        assertEquals(null, scheduler.repeatAt)
+        assertEquals(1, notifier.cleared)
+        scheduler.repeatAt = Instant.EPOCH
+        vm.onEvent(HomeUiEvent.NotTaken)
+        assertEquals(null, scheduler.repeatAt) // undoing a wrong tap does not restart them
+    }
+
+    @Test
     fun homeCountsDaysSinceLastPillWhenDaysWereMissed() {
         settings.settings.value = Settings(PackType.WITH_PLACEBO, LocalDate.of(2026, 10, 1), LocalTime.NOON)
         val clock = clockAt(oct6, LocalTime.of(23, 59))
-        val vm = HomeViewModel(clock, MONDAY, repo, settings)
+        val vm = home(clock)
         assertEquals(null, vm.state.value.daysSinceLastPill) // nothing logged yet
         repo.intakes.value = mapOf(oct6.minusDays(1) to Instant.EPOCH)
         assertEquals(null, vm.state.value.daysSinceLastPill)
@@ -187,7 +206,7 @@ class ViewModelsTest {
 
     @Test
     fun homeWarnsWhileNotificationsAreOff() {
-        val vm = HomeViewModel(clockAt(oct6, LocalTime.NOON), MONDAY, repo, settings)
+        val vm = home(clockAt(oct6, LocalTime.NOON))
         assertFalse(vm.state.value.notificationsOff)
         vm.onEvent(HomeUiEvent.NotificationsChecked(allowed = false))
         assertTrue(vm.state.value.notificationsOff)
@@ -198,7 +217,7 @@ class ViewModelsTest {
     @Test
     fun homeRollsOverAtMidnightOnResume() {
         val clock = clockAt(LocalDate.of(2026, 10, 5), LocalTime.of(23, 59))
-        val vm = HomeViewModel(clock, MONDAY, repo, settings)
+        val vm = home(clock)
         vm.onEvent(HomeUiEvent.Taken)
         assertEquals(LocalDate.of(2026, 10, 5), vm.state.value.today)
 
@@ -211,7 +230,7 @@ class ViewModelsTest {
     @Test
     fun takenLogsTheCurrentDayEvenWithoutResume() {
         val clock = clockAt(LocalDate.of(2026, 10, 5), LocalTime.of(23, 59))
-        val vm = HomeViewModel(clock, MONDAY, repo, settings)
+        val vm = home(clock)
         clock.instant = clock.instant.plusSeconds(120)
         vm.onEvent(HomeUiEvent.Taken)
         assertEquals(setOf(LocalDate.of(2026, 10, 6)), repo.intakes.value.keys)
@@ -221,7 +240,7 @@ class ViewModelsTest {
     fun todayFollowsTravelZoneChange() {
         // Same instant: already Oct 6 in Madrid, still Oct 5 in New York.
         val clock = clockAt(LocalDate.of(2026, 10, 6), LocalTime.of(2, 0))
-        val vm = HomeViewModel(clock, MONDAY, repo, settings)
+        val vm = home(clock)
         clock.zoneId = ZoneId.of("America/New_York")
         vm.onEvent(HomeUiEvent.Resumed)
         assertEquals(LocalDate.of(2026, 10, 5), vm.state.value.today)
@@ -230,14 +249,14 @@ class ViewModelsTest {
     @Test
     fun todayOnDstChangeDay() {
         // Europe falls back on 2026-10-25 at 03:00 -> 02:00.
-        val vm = HomeViewModel(clockAt(LocalDate.of(2026, 10, 25), LocalTime.of(2, 30)), MONDAY, repo, settings)
+        val vm = home(clockAt(LocalDate.of(2026, 10, 25), LocalTime.of(2, 30)))
         assertEquals(LocalDate.of(2026, 10, 25), vm.state.value.today)
     }
 
     @Test
     fun calendarShowsTakenNotTakenUpcomingAndNavigatesMonths() {
         repo.intakes.value = mapOf(LocalDate.of(2026, 10, 3) to Instant.EPOCH)
-        val vm = HomeViewModel(clockAt(LocalDate.of(2026, 10, 6), LocalTime.NOON), MONDAY, repo, settings)
+        val vm = home(clockAt(LocalDate.of(2026, 10, 6), LocalTime.NOON))
         val cells = vm.state.value.weeks.flatten().filterNotNull()
         assertEquals(YearMonth.of(2026, 10), vm.state.value.month)
         assertEquals(LocalDate.of(2026, 10, 6), cells.single { it.isToday }.date)
@@ -255,7 +274,7 @@ class ViewModelsTest {
 
     @Test
     fun calendarUpdatesWhenAPillIsLogged() {
-        val vm = HomeViewModel(clockAt(LocalDate.of(2026, 10, 6), LocalTime.NOON), MONDAY, repo, settings)
+        val vm = home(clockAt(LocalDate.of(2026, 10, 6), LocalTime.NOON))
         repo.intakes.value = mapOf(LocalDate.of(2026, 10, 6) to Instant.EPOCH)
         assertEquals(DayStatus.TAKEN, vm.state.value.weeks.flatten().filterNotNull().single { it.isToday }.status)
     }
@@ -263,7 +282,7 @@ class ViewModelsTest {
     @Test
     fun resumeReturnsCalendarToTheCurrentMonth() {
         val clock = clockAt(LocalDate.of(2026, 10, 31), LocalTime.of(23, 59))
-        val vm = HomeViewModel(clock, MONDAY, repo, settings)
+        val vm = home(clock)
         vm.onEvent(HomeUiEvent.PreviousMonth)
         clock.instant = clock.instant.plusSeconds(60) // Nov 1
         vm.onEvent(HomeUiEvent.Resumed)
@@ -276,7 +295,7 @@ class ViewModelsTest {
 
     @Test
     fun takenTodayShowsInTheCalendarWhileViewingAnotherMonth() {
-        val vm = HomeViewModel(clockAt(LocalDate.of(2026, 10, 6), LocalTime.NOON), MONDAY, repo, settings)
+        val vm = home(clockAt(LocalDate.of(2026, 10, 6), LocalTime.NOON))
         vm.onEvent(HomeUiEvent.PreviousMonth)
         vm.onEvent(HomeUiEvent.Taken)
         assertTrue(vm.state.value.taken)

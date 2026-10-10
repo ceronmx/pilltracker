@@ -34,8 +34,10 @@ class ReminderUseCasesTest {
 
     private fun handle(
         clock: Clock,
-        alarmFired: Boolean = true,
-    ) = runBlocking { HandleReminderUseCase(settings, intakes, scheduler, notifier, clock)(alarmFired) }
+        trigger: ReminderTrigger = ReminderTrigger.DAILY,
+    ) = runBlocking { HandleReminderUseCase(settings, intakes, scheduler, notifier, clock)(trigger) }
+
+    private fun logTaken(clock: Clock) = runBlocking { LogTakenUseCase(intakes, notifier, scheduler, clock)() }
 
     @Test
     fun alarmOnAnUnloggedPillDayRemindsAndReschedules() {
@@ -76,7 +78,7 @@ class ReminderUseCasesTest {
                     scheduler,
                     notifier,
                     clock("2026-10-06T09:00"),
-                )(true)
+                )(ReminderTrigger.DAILY)
             }
         }
         assertEquals(listOf(nine), scheduler.scheduled)
@@ -84,7 +86,7 @@ class ReminderUseCasesTest {
 
     @Test
     fun rebootOrTimeChangeOnlyReschedules() {
-        handle(clock("2026-10-06T09:00"), alarmFired = false)
+        handle(clock("2026-10-06T08:00"), ReminderTrigger.SYSTEM)
         assertEquals(0, notifier.shown)
         assertEquals(listOf(nine), scheduler.scheduled)
     }
@@ -126,17 +128,75 @@ class ReminderUseCasesTest {
     }
 
     @Test
+    fun dailyAlarmOnAnUnloggedPillDayStartsTheRepeats() {
+        val clock = clock("2026-10-06T09:03")
+        handle(clock)
+        assertEquals(clock.instant().plusSeconds(300), scheduler.repeatAt)
+    }
+
+    @Test
+    fun aRepeatWithinTheHourRemindsAgainAndChainsTheNext() {
+        val clock = clock("2026-10-06T09:30")
+        handle(clock, ReminderTrigger.REPEAT)
+        assertEquals(1, notifier.shown)
+        assertEquals(clock.instant().plusSeconds(300), scheduler.repeatAt)
+        assertEquals(listOf(nine), scheduler.scheduled)
+    }
+
+    @Test
+    fun aRepeatAfterTheHourIsSilentAndEndsTheChain() {
+        handle(clock("2026-10-06T10:20"), ReminderTrigger.REPEAT)
+        assertEquals(0, notifier.shown)
+        assertEquals(null, scheduler.repeatAt)
+    }
+
+    @Test
+    fun aLateDailyAlarmStillRemindsButDoesNotRepeat() {
+        // Doze held the daily alarm past the repeat hour (ADR 0004).
+        handle(clock("2026-10-06T11:00"))
+        assertEquals(1, notifier.shown)
+        assertEquals(null, scheduler.repeatAt)
+    }
+
+    @Test
+    fun aRepeatAfterTakenOrOnABreakDayIsSilentAndEndsTheChain() {
+        intakes.intakes.value = mapOf(oct6 to Instant.EPOCH)
+        handle(clock("2026-10-06T09:30"), ReminderTrigger.REPEAT)
+        handle(clock("2026-10-22T09:30"), ReminderTrigger.REPEAT)
+        assertEquals(0, notifier.shown)
+        assertEquals(null, scheduler.repeatAt)
+    }
+
+    @Test
+    fun rebootDuringTheHourRestartsTheRepeatsWithoutNotifying() {
+        val clock = clock("2026-10-06T09:30")
+        handle(clock, ReminderTrigger.SYSTEM)
+        assertEquals(0, notifier.shown)
+        assertEquals(clock.instant().plusSeconds(300), scheduler.repeatAt)
+    }
+
+    @Test
+    fun aRepeatJustBeforeMidnightDoesNotChainIntoTheNextPillDay() {
+        settings.settings.value = settings.settings.value?.copy(reminderTime = LocalTime.of(23, 50))
+        handle(clock("2026-10-06T23:56"), ReminderTrigger.REPEAT)
+        assertEquals(1, notifier.shown)
+        assertEquals(null, scheduler.repeatAt)
+    }
+
+    @Test
     fun takenLogsTheCurrentPillDayAndInstantAndClearsTheReminder() {
         val clock = clock("2026-10-07T00:00:30")
-        runBlocking { LogTakenUseCase(intakes, notifier, clock)() }
+        scheduler.repeatAt = clock.instant()
+        logTaken(clock)
         assertEquals(mapOf(LocalDate.of(2026, 10, 7) to clock.instant()), intakes.intakes.value)
         assertEquals(1, notifier.cleared)
+        assertEquals(null, scheduler.repeatAt) // Taken ends the repeats (AC2.1)
     }
 
     @Test
     fun takenWhileTravelingLogsTheLocalPillDay() {
         val instant = LocalDateTime.parse("2026-10-07T02:00").atZone(madrid).toInstant()
-        runBlocking { LogTakenUseCase(intakes, notifier, Clock.fixed(instant, newYork))() }
+        logTaken(Clock.fixed(instant, newYork))
         assertEquals(setOf(oct6), intakes.intakes.value.keys)
     }
 }

@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.pilltracker.domain.IntakeRepository
+import dev.pilltracker.domain.LogTakenUseCase
+import dev.pilltracker.domain.ReminderScheduler
 import dev.pilltracker.domain.Settings
 import dev.pilltracker.domain.SettingsRepository
 import dev.pilltracker.domain.rules.DayKind
@@ -74,6 +76,8 @@ class HomeViewModel
         private val firstDayOfWeek: DayOfWeek,
         private val intakes: IntakeRepository,
         settings: SettingsRepository,
+        private val logTaken: LogTakenUseCase,
+        private val reminders: ReminderScheduler,
     ) : ViewModel() {
         private val today = MutableStateFlow(LocalDate.now(clock))
         private val month = MutableStateFlow(YearMonth.from(today.value))
@@ -105,10 +109,15 @@ class HomeViewModel
                 }
                 HomeUiEvent.Taken -> {
                     today.value = LocalDate.now(clock)
-                    viewModelScope.launch { intakes.markTaken(today.value, clock.instant()) }
+                    viewModelScope.launch { logTaken() }
                 }
                 // The day on screen, not a re-read clock: undo what she sees as "logged for today".
-                HomeUiEvent.NotTaken -> viewModelScope.launch { intakes.markNotTaken(today.value) }
+                // Repeats stay off: undoing a wrong tap must not restart them (ADR 0005).
+                HomeUiEvent.NotTaken ->
+                    viewModelScope.launch {
+                        intakes.markNotTaken(today.value)
+                        reminders.cancelRepeat()
+                    }
             }
         }
 
