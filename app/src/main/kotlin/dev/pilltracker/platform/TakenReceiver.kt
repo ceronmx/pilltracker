@@ -3,6 +3,7 @@ package dev.pilltracker.platform
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import dagger.hilt.android.AndroidEntryPoint
 import dev.pilltracker.domain.LogTakenUseCase
 import kotlinx.coroutines.CoroutineScope
@@ -15,6 +16,7 @@ import javax.inject.Inject
 class TakenReceiver : BroadcastReceiver() {
     @Inject lateinit var logTaken: LogTakenUseCase
 
+    @Suppress("TooGenericExceptionCaught")
     override fun onReceive(
         context: Context,
         intent: Intent,
@@ -23,6 +25,9 @@ class TakenReceiver : BroadcastReceiver() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 logTaken()
+            } catch (e: Exception) {
+                // An uncaught error here kills the process; log it and let the receiver finish.
+                Log.e("TakenReceiver", "failed", e)
             } finally {
                 done.finish()
             }

@@ -13,14 +13,20 @@ class HandleReminderUseCase(
     private val notifier: Notifier,
     private val clock: Clock,
 ) {
-    /** [alarmFired] is false after a reboot, app update or time change: only reschedule. */
+    /**
+     * [alarmFired] is false after a reboot, app update or time change: only reschedule. A failure while
+     * reminding still schedules tomorrow's alarm, then rethrows; without settings there is no time to schedule.
+     */
     suspend operator fun invoke(alarmFired: Boolean) {
         val s = settings.settings.first() ?: return // setup not done: nothing to remind
-        if (alarmFired) {
-            val today = LocalDate.now(clock)
-            val taken = today in intakes.takenDays(today, today).first()
-            if (shouldRemind(s, today, taken)) notifier.showReminder()
+        try {
+            if (alarmFired) {
+                val today = LocalDate.now(clock)
+                val taken = today in intakes.takenDays(today, today).first()
+                if (shouldRemind(s, today, taken)) notifier.showReminder()
+            }
+        } finally {
+            scheduler.scheduleNext(s.reminderTime)
         }
-        scheduler.scheduleNext(s.reminderTime)
     }
 }

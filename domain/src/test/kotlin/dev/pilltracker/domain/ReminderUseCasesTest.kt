@@ -1,9 +1,13 @@
 package dev.pilltracker.domain
 
 import dev.pilltracker.domain.rules.PackType
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
+import java.io.IOException
 import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
@@ -52,6 +56,29 @@ class ReminderUseCasesTest {
     fun alarmOnABreakDayOnlyReschedules() {
         handle(clock("2026-10-22T09:00"))
         assertEquals(0, notifier.shown)
+        assertEquals(listOf(nine), scheduler.scheduled)
+    }
+
+    @Test
+    fun aFailingReadStillSchedulesTheNextReminder() {
+        val broken =
+            object : IntakeRepository by intakes {
+                override fun takenDays(
+                    from: LocalDate,
+                    to: LocalDate,
+                ): Flow<Set<LocalDate>> = flow { throw IOException("disk") }
+            }
+        assertThrows(IOException::class.java) {
+            runBlocking {
+                HandleReminderUseCase(
+                    settings,
+                    broken,
+                    scheduler,
+                    notifier,
+                    clock("2026-10-06T09:00"),
+                )(true)
+            }
+        }
         assertEquals(listOf(nine), scheduler.scheduled)
     }
 
