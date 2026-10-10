@@ -120,15 +120,19 @@ private val PACK_CODES = mapOf(PackType.WITH_PLACEBO to "TWENTY_EIGHT", PackType
 class RoomSettingsRepository(private val db: PillDatabase) : SettingsRepository {
     private val dao = db.settingsDao()
 
+    /** An unknown stored pack code reads as "no settings", so setup reruns instead of the flow crashing. */
     override val settings: Flow<Settings?> =
         dao.settings().map { e ->
             e?.let {
-                Settings(
-                    PACK_CODES.entries.first { (_, code) -> code == it.packType }.key,
-                    LocalDate.ofEpochDay(it.packStartEpochDay),
-                    LocalTime.ofSecondOfDay(it.reminderMinuteOfDay * SECONDS_PER_MINUTE),
-                    GuineaPig.entries.firstOrNull { pig -> pig.name == it.guineaPig } ?: GuineaPig.TRICOLOR,
-                )
+                val packType = PACK_CODES.entries.firstOrNull { (_, code) -> code == it.packType }?.key
+                packType?.let { type ->
+                    Settings(
+                        type,
+                        LocalDate.ofEpochDay(it.packStartEpochDay),
+                        LocalTime.ofSecondOfDay(it.reminderMinuteOfDay * SECONDS_PER_MINUTE),
+                        GuineaPig.entries.firstOrNull { pig -> pig.name == it.guineaPig } ?: GuineaPig.TRICOLOR,
+                    )
+                }
             }
         }
 

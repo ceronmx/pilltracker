@@ -90,6 +90,14 @@ class SettingsRepositoryTest {
             assertEquals(second, repo.settings.first())
         }
 
+    @Test fun unknownStoredPackTypeReadsAsNoSettings() =
+        runTest {
+            db.settingsDao().save(
+                SettingsEntity(packType = "FORTY_TWO", packStartEpochDay = 0, reminderMinuteOfDay = 9),
+            )
+            assertEquals(null, repo.settings.first())
+        }
+
     @Test fun deleteAllEmptiesSettingsAndIntakes() =
         runTest {
             val intakes = RoomIntakeRepository(db.intakeDao())
