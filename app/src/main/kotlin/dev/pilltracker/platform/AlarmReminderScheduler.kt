@@ -4,6 +4,7 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.pilltracker.domain.Notifier
 import dev.pilltracker.domain.ReminderScheduler
@@ -18,10 +19,7 @@ internal const val ACTION_REPEAT = "dev.pilltracker.REPEAT"
 
 private const val WINDOW_MILLIS = 10 * 60 * 1000L
 
-/**
- * Inexact 10-minute window, no exact-alarm permission (ADR 0004). In deep Doze it waits for the next
- * maintenance window or screen-on; setAndAllowWhileIdle was rejected for its +1h window.
- */
+/** Exact alarms that fire in Doze too, via the auto-granted USE_EXACT_ALARM (ADR 0006). */
 class AlarmReminderScheduler
     @Inject
     constructor(
@@ -44,14 +42,19 @@ class AlarmReminderScheduler
 
         private fun repeat() = broadcast(ACTION_REPEAT)
 
-        override fun scheduleNext(time: LocalTime) {
-            val at = nextReminderAt(time, clock.instant(), clock.zone)
-            alarms.setWindow(AlarmManager.RTC_WAKEUP, at.toEpochMilli(), WINDOW_MILLIS, remind())
+        // API 31-32 grant SCHEDULE_EXACT_ALARM by default but the user can revoke it; then fall back to inexact.
+        private fun set(
+            at: Instant,
+            intent: PendingIntent,
+        ) = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S || alarms.canScheduleExactAlarms()) {
+            alarms.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at.toEpochMilli(), intent)
+        } else {
+            alarms.setWindow(AlarmManager.RTC_WAKEUP, at.toEpochMilli(), WINDOW_MILLIS, intent)
         }
 
-        /** Fires in Doze too, without the exact-alarm permission; idle phones may get it late (ADR 0005). */
-        override fun scheduleRepeat(at: Instant) =
-            alarms.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at.toEpochMilli(), repeat())
+        override fun scheduleNext(time: LocalTime) = set(nextReminderAt(time, clock.instant(), clock.zone), remind())
+
+        override fun scheduleRepeat(at: Instant) = set(at, repeat())
 
         override fun cancelRepeat() = alarms.cancel(repeat())
 

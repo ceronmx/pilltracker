@@ -1,6 +1,6 @@
 # ADR 0005: Repeat reminders every 5 minutes, guinea pig sound
 
-- Status: Accepted
+- Status: Accepted; alarm type superseded by [ADR 0006](0006-exact-reminder-alarm.md)
 - Date: 2026-10-09
 - Supersedes: [ADR 0004](0004-inexact-reminder-alarm.md) for the repeats only; the daily alarm stays `setWindow`.
 

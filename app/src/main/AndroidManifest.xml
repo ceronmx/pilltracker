@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Only runtime permission the app asks for (ADR 0004). -->
+    <!-- Only runtime permission the app asks for (ADR 0004). The exact-alarm ones below need no prompt (ADR 0006). -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+    <uses-permission
+        android:name="android.permission.SCHEDULE_EXACT_ALARM"
+        android:maxSdkVersion="32" />
     <!-- Reschedule the daily alarm after a reboot (AC2.1). -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
