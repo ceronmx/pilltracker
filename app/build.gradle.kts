@@ -13,8 +13,8 @@ android {
         applicationId = "dev.pilltracker"
         minSdk = 26
         targetSdk = 34
-        versionCode = 4
-        versionName = "0.4"
+        versionCode = 5
+        versionName = "0.5"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     // Release key stays out of git: set these in ~/.gradle/gradle.properties (see README).
